@@ -205,19 +205,21 @@
             from { transform: scale(0.85); opacity: 0; }
             to   { transform: scale(1);    opacity: 1; }
         }
-        .gl-car-img {
-            width: 130px;
+        .gl-car-img, .gl-plane-img {
+            width: 170px;
+            max-width: 90vw;
             height: auto;
             display: block;
-            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(11, 34, 61, 0.15);
         }
         .gl-dots { display: flex; gap: 6px; align-items: center; }
-        .gl-dot { width: 8px; height: 8px; border-radius: 50%; background: #76C419; animation: gl-bounce 1.2s ease-in-out infinite; }
-        .gl-dot:nth-child(1) { animation-delay: 0s; }
-        .gl-dot:nth-child(2) { animation-delay: 0.2s; }
-        .gl-dot:nth-child(3) { animation-delay: 0.4s; }
+        .gl-dot { width: 8px; height: 8px; border-radius: 50%; background: #d4af37; animation: gl-bounce 1.2s ease-in-out infinite; }
+        .gl-dot:nth-child(1) { animation-delay: 0s; background: #008c45; }
+        .gl-dot:nth-child(2) { animation-delay: 0.2s; background: #d4af37; }
+        .gl-dot:nth-child(3) { animation-delay: 0.4s; background: #0b223d; }
         @keyframes gl-bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1.1); opacity: 1; } }
-        .gl-text { font-family: 'Cairo', sans-serif !important; font-size: 15px; font-weight: 700; color: #1E3A1A; margin: 0; }
+        .gl-text { font-family: 'Cairo', sans-serif !important; font-size: 15px; font-weight: 700; color: #0b223d; margin: 0; }
         .gl-sub  { font-family: 'Cairo', sans-serif !important; font-size: 12px; font-weight: 500; color: #64748b; margin: 0; }
         #global-loader .loader-img { display: none !important; }
     </style>
@@ -232,7 +234,7 @@
     <!-- GLOABAL LOADER -->
     <div id="global-loader">
         <div class="gl-box">
-            <img src="{{url('Admin')}}/imgs/car-loader.gif" alt="جاري التحميل" class="gl-car-img">
+            <img src="{{ asset('Admin/imgs/loader.webp') }}" alt="جاري التحميل" class="gl-plane-img">
             <div class="gl-dots">
                 <div class="gl-dot"></div>
                 <div class="gl-dot"></div>

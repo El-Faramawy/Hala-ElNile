@@ -13,6 +13,7 @@ readonly class ContactMessageDTO
         public string $phone,
         public string $message,
         public ?int $cityId = null,
+        public ?string $subject = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -22,6 +23,7 @@ readonly class ContactMessageDTO
             phone: (string) $request->input('phone'),
             message: (string) $request->input('message'),
             cityId: $request->filled('city_id') ? (int) $request->input('city_id') : null,
+            subject: $request->filled('subject') ? (string) $request->input('subject') : null,
         );
     }
 
@@ -35,6 +37,7 @@ readonly class ContactMessageDTO
             'phone' => $this->phone,
             'message' => $this->message,
             'city_id' => $this->cityId,
+            'subject' => $this->subject,
         ];
     }
 }

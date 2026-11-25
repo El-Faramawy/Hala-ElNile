@@ -3,7 +3,9 @@
      ========================================================================== -->
 <nav class="navbar navbar-expand-xl main-navbar" id="mainNavbar">
   <!-- Smooth Scroll Progress Line (Directly Below Navbar) -->
-  <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+  <div class="scroll-progress-track" aria-hidden="true">
+    <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+  </div>
 
   <div class="container-fluid px-lg-4 px-xxl-5">
     <!-- Brand Logo -->
@@ -19,35 +21,17 @@
     <!-- Nav Links (Single line strictly, with dynamic active indicator) -->
     <div class="collapse navbar-collapse" id="navbarContent">
       <ul class="navbar-nav mx-auto mb-2 mb-xl-0 align-items-center">
-        <li class="nav-item">
-          <a class="nav-link active" href="#hero">الرئيسية</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#about">من نحن</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#why-us">لماذا نحن؟</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link fw-bold text-success" href="#jobs">
-            <i class="fa-solid fa-fire text-danger me-1"></i> الوظائف المتاحة
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#steps">خطوات السفر</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#travelers">مسافرونا بإيطاليا</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#tracker">تتبع العقد</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#faq">الأسئلة الشائعة</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#contact">تواصل معنا</a>
-        </li>
+        <x-site.nav-link href="#hero" :active="true">الرئيسية</x-site.nav-link>
+        <x-site.nav-link href="#about">من نحن</x-site.nav-link>
+        <x-site.nav-link href="#why-us">لماذا نحن؟</x-site.nav-link>
+        <x-site.nav-link href="#jobs" class="fw-bold text-success">
+          <i class="fa-solid fa-fire text-danger me-1"></i> الوظائف المتاحة
+        </x-site.nav-link>
+        <x-site.nav-link href="#steps">خطوات السفر</x-site.nav-link>
+        <x-site.nav-link href="#travelers">مسافرونا بإيطاليا</x-site.nav-link>
+        <x-site.nav-link href="#tracker">تتبع العقد</x-site.nav-link>
+        <x-site.nav-link href="#faq">الأسئلة الشائعة</x-site.nav-link>
+        <x-site.nav-link href="#contact">تواصل معنا</x-site.nav-link>
       </ul>
 
       <!-- Action CTA -->

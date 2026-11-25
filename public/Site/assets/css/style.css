@@ -67,7 +67,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
@@ -78,7 +78,7 @@ body {
   direction: rtl;
   text-align: right;
   line-height: 1.7;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   width: 100%;
 }
@@ -226,6 +226,56 @@ img {
 }
 
 /* ==========================================================================
+   Page Loader (Modern Frosted Glass with Floating Airplane Animation)
+   ========================================================================== */
+#page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  will-change: opacity, visibility;
+}
+
+#page-loader.loaded {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.page-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(11, 34, 61, 0.25), 0 0 0 1px rgba(212, 175, 55, 0.3);
+  animation: pageLoaderFloat 2.2s ease-in-out infinite;
+  background: #06162e;
+}
+
+.page-loader-img {
+  width: clamp(220px, 32vw, 300px);
+  height: auto;
+  display: block;
+}
+
+@keyframes pageLoaderFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ==========================================================================
    Top Header Bar
    ========================================================================== */
 .top-bar {
@@ -260,27 +310,36 @@ img {
   background-color: #ffffff;
   box-shadow: var(--shadow-sm);
   padding: 10px 0;
-  transition: var(--transition);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: sticky;
   top: 0;
-  z-index: 1020;
+  z-index: 1030;
 }
 .main-navbar.navbar-scrolled {
-  box-shadow: 0 4px 20px rgba(11, 34, 61, 0.08);
+  box-shadow: 0 6px 24px rgba(11, 34, 61, 0.12);
   padding: 6px 0;
   background-color: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.scroll-progress-bar {
+.scroll-progress-track {
   position: absolute;
   bottom: 0;
+  left: 0;
   right: 0;
-  height: 3px;
-  width: 0%;
-  background: linear-gradient(90deg, var(--secondary-color) 0%, var(--accent-gold) 100%);
+  width: 100%;
+  height: 4px;
+  background: rgba(11, 34, 61, 0.08);
+  overflow: hidden;
   z-index: 1050;
-  transition: width 0.08s ease-out;
-  box-shadow: 0 0 8px rgba(0, 140, 69, 0.4);
+}
+.scroll-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(270deg, var(--secondary-color) 0%, var(--accent-gold) 50%, var(--primary-color) 100%);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.8), 0 0 5px rgba(0, 140, 69, 0.6);
+  transition: width 0.06s ease-out;
+  border-radius: 4px;
 }
 .navbar-brand-logo {
   height: 52px;
@@ -851,6 +910,94 @@ img {
   background-color: #eafaf1;
 }
 
+/* Job Badges & Responsive Card Elements */
+.job-badges-header {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.job-category-badge {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  white-space: normal !important;
+  line-height: 1.4 !important;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  text-align: center;
+  padding: 5px 12px !important;
+}
+
+.job-type-badge {
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.4 !important;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  text-align: right;
+  padding: 4px 10px !important;
+}
+
+.job-title {
+  font-size: 1.15rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.job-meta-grid {
+  min-width: 0;
+}
+
+.job-meta-grid > div {
+  min-width: 0;
+  gap: 8px;
+}
+
+.job-meta-grid span {
+  word-break: break-word;
+}
+
+.job-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.job-card-actions .btn {
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+/* Toastify RTL & Cairo Theme */
+.toastify {
+  font-family: 'Cairo', sans-serif !important;
+  direction: rtl !important;
+  text-align: right !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 14px 22px !important;
+  line-height: 1.5 !important;
+  max-width: calc(100% - 30px) !important;
+}
+
+.toastify .toast-close {
+  float: left !important;
+  margin-right: 12px !important;
+  margin-left: 0 !important;
+  opacity: 0.8 !important;
+}
+
 /* ==========================================================================
    Italy Roadmap Steps (Timeline)
    ========================================================================== */
@@ -1408,11 +1555,42 @@ img {
   .job-card-img-wrapper {
     height: 180px;
   }
+  .job-card-img-wrapper .badge {
+    margin: 10px !important;
+    font-size: 0.72rem !important;
+    padding: 4px 10px !important;
+  }
+  .job-city-tag {
+    margin: 10px !important;
+    font-size: 0.82rem !important;
+  }
   .card-body {
-    padding: 20px 16px !important;
+    padding: 18px 14px !important;
+  }
+  .job-badges-header {
+    gap: 6px !important;
+  }
+  .job-category-badge,
+  .job-type-badge {
+    font-size: 0.72rem !important;
+    padding: 4px 8px !important;
+  }
+  .job-title {
+    font-size: 1.05rem !important;
   }
   .job-meta-grid {
-    padding: 12px !important;
+    padding: 10px !important;
+    margin: 10px 0 !important;
+  }
+  .job-meta-grid > div {
+    font-size: 0.82rem !important;
+  }
+  .job-card-actions {
+    gap: 6px !important;
+  }
+  .job-card-actions .btn {
+    font-size: 0.82rem !important;
+    padding: 8px 6px !important;
   }
   .contact-info-card {
     padding: 18px;
@@ -1421,6 +1599,24 @@ img {
   .contact-icon {
     width: 44px;
     height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .job-card-actions {
+    flex-direction: column !important;
+  }
+  .job-card-actions .btn {
+    width: 100% !important;
+  }
+  .job-badges-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .job-category-badge,
+  .job-type-badge {
+    width: fit-content;
+  }
     font-size: 18px;
   }
 }
@@ -1806,7 +2002,7 @@ button:focus-visible,
    Small Mobile & Responsive Form Overflow Fixes
    ========================================================================== */
 html, body {
-  overflow-x: hidden !important;
+  overflow-x: clip !important;
   max-width: 100% !important;
   width: 100%;
 }

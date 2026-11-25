@@ -23,6 +23,11 @@
             <span class="side-menu__label">الرئيسية</span>
         </x-sidebar-link>
 
+        <x-sidebar-link href="{{ route('accounting.dashboard') }}">
+            <i class="fe fe-dollar-sign side-menu__icon text-success"></i>
+            <span class="side-menu__label text-success font-weight-bold">المنظومة المالية</span>
+        </x-sidebar-link>
+
         <x-sidebar-link href="{{ route('admins.index') }}">
             <i class="fe fe-users side-menu__icon"></i>
             <span class="side-menu__label">المشرفين</span>
@@ -36,12 +41,12 @@
         </li>
         <x-sidebar-link href="{{ route('job-categories.index') }}">
             <i class="fe fe-grid side-menu__icon"></i>
-            <span class="side-menu__label">أقسام ومجالات العمل</span>
+            <span class="side-menu__label">أصناف الوظائف</span>
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('jobs.index') }}">
             <i class="fe fe-briefcase side-menu__icon"></i>
-            <span class="side-menu__label">عقود وفرص العمل</span>
+            <span class="side-menu__label">فرص العمل المتاحة</span>
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('job-applications.index') }}">
@@ -57,12 +62,33 @@
         </li>
         <x-sidebar-link href="{{ route('contract-trackers.index') }}">
             <i class="fe fe-check-circle side-menu__icon"></i>
-            <span class="side-menu__label">تتبع العقود والمعاملات</span>
+            <span class="side-menu__label">العقود السارية</span>
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('travelers.index') }}">
             <i class="fe fe-award side-menu__icon"></i>
             <span class="side-menu__label">مسافرونا في إيطاليا</span>
+        </x-sidebar-link>
+
+        <li class="side-item side-item-category">
+            <div class="side-category-badge">
+                <i class="fe fe-map-pin side-category-icon"></i>
+                <span class="side-category-text">المحافظات والوجهات</span>
+            </div>
+        </li>
+        <x-sidebar-link href="{{ route('cities.index') }}">
+            <i class="fe fe-map-pin side-menu__icon"></i>
+            <span class="side-menu__label">محافظات مصر</span>
+        </x-sidebar-link>
+
+        <x-sidebar-link href="{{ route('italy-cities.index') }}">
+            <i class="fe fe-globe side-menu__icon"></i>
+            <span class="side-menu__label">مدن إيطاليا</span>
+        </x-sidebar-link>
+
+        <x-sidebar-link href="{{ route('italy-landmarks.index') }}">
+            <i class="fe fe-image side-menu__icon"></i>
+            <span class="side-menu__label">مناطق ومعالم إيطاليا</span>
         </x-sidebar-link>
 
         <li class="side-item side-item-category">
@@ -74,11 +100,6 @@
         <x-sidebar-link href="{{ route('contact-messages.index') }}">
             <i class="fe fe-mail side-menu__icon"></i>
             <span class="side-menu__label">رسائل واستفسارات العملاء</span>
-        </x-sidebar-link>
-
-        <x-sidebar-link href="{{ route('cities.index') }}">
-            <i class="fe fe-map-pin side-menu__icon"></i>
-            <span class="side-menu__label">المحافظات والمدن</span>
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('faqs.index') }}">

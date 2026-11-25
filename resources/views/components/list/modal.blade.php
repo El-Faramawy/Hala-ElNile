@@ -1,4 +1,4 @@
-@props(['name' => 'الرئيسية' , 'save_button' => true ])
+@props(['name' => 'الرئيسية' , 'save_button' => true, 'save_and_print' => false])
 
 
 <div class="modal fade" id="Modal" tabindex="-1" aria-hidden="true">
@@ -16,6 +16,13 @@
             </div>
             <!--end::Modal body-->
             <div class="modal-footer">
+                @if($save_and_print)
+                    <div>
+                        <button form="form" type="submit" id="submitAndPrint" class="btn btn-success me-2" style="min-width: 130px">
+                            <i class="fa fa-print ml-1"></i> حفظ وطباعة
+                        </button>
+                    </div>
+                @endif
                 @if($save_button)
                     <div class=" ">
                         <input  form="form" value="حفظ" type="submit" id="submit" class="btn btn-primary " style="width: 100px">

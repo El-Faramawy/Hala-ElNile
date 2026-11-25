@@ -21,6 +21,7 @@ class StoreJobCategoryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'display_location' => ['required', 'string', 'in:both,website,dashboard'],
             'is_active' => ['required', 'boolean'],
             'icon' => ['nullable', 'string', 'max:255'],
             'icon_file' => ['nullable', 'image', 'max:2048'],

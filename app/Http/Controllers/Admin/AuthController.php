@@ -24,9 +24,13 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         if (admin()->attempt($request->validated())) {
+            $redirectUrl = $request->routeIs('accounting.post_login') || str_contains($request->header('referer', ''), 'accounting')
+                ? route('accounting.dashboard')
+                : route('admin.home');
+
             return response()->json([
                 'message' => 'تم تسجيل الدخول بنجاح',
-                'url' => route('admin.home'),
+                'url' => $redirectUrl,
             ]);
         }
 

@@ -1311,15 +1311,15 @@
        Global Loader & Skeleton Shimmer Loaders
        ========================================================================== */
 
-    /* ── Arabic Car Loader ── */
+    /* ── Arabic Plane Loader ── */
     #global-loader {
         display: none;
         position: fixed;
         z-index: 50000 !important;
         inset: 0;
-        background: rgba(10, 30, 8, 0.55) !important;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        background: rgba(11, 34, 61, 0.72) !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         align-items: center;
         justify-content: center;
         flex-direction: column;
@@ -1331,14 +1331,14 @@
 
     /* Loader box */
     .gl-box {
-        background: rgba(255,255,255,0.97);
+        background: rgba(255,255,255,0.98);
         border-radius: 20px;
-        padding: 36px 48px;
+        padding: 30px 42px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(118,196,25,0.2);
+        gap: 14px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(212,175,55,0.3);
         animation: gl-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
     @keyframes gl-pop {
@@ -1346,12 +1346,15 @@
         to   { transform: scale(1);    opacity: 1; }
     }
 
-    /* Car Loader Image */
-    .gl-car-img {
-        width: 130px;
+    /* Loader Image */
+    .gl-car-img,
+    .gl-plane-img {
+        width: 170px;
+        max-width: 90vw;
         height: auto;
         display: block;
-        object-fit: contain;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(11, 34, 61, 0.15);
     }
 
     /* Dots pulse row */
@@ -1364,12 +1367,12 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #76C419;
+        background: #d4af37;
         animation: gl-bounce 1.2s ease-in-out infinite;
     }
-    .gl-dot:nth-child(1) { animation-delay: 0s; }
-    .gl-dot:nth-child(2) { animation-delay: 0.2s; }
-    .gl-dot:nth-child(3) { animation-delay: 0.4s; }
+    .gl-dot:nth-child(1) { animation-delay: 0s;   background: #008c45; }
+    .gl-dot:nth-child(2) { animation-delay: 0.2s; background: #d4af37; }
+    .gl-dot:nth-child(3) { animation-delay: 0.4s; background: #0b223d; }
     @keyframes gl-bounce {
         0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
         40%            { transform: scale(1.1); opacity: 1;   }
@@ -1380,7 +1383,7 @@
         font-family: 'Cairo', sans-serif !important;
         font-size: 15px;
         font-weight: 700;
-        color: #1E3A1A;
+        color: #0b223d;
         letter-spacing: 0.2px;
         margin: 0;
     }

@@ -27,6 +27,15 @@ class ContractTrackerController extends Controller
         return view('Admin.ContractTracker.index');
     }
 
+    public function activeContracts(Request $request): View|JsonResponse
+    {
+        if ($request->ajax()) {
+            return $this->service->getActiveContractsDataTable();
+        }
+
+        return view('Admin.ContractTracker.active');
+    }
+
     public function create(): View
     {
         return view('Admin.ContractTracker.parts.create');

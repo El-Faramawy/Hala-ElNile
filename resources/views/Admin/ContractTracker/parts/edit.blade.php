@@ -2,6 +2,18 @@
     @csrf
     @method('PUT')
     <div class="row mt-0">
+        @if($contractTracker->job_application_id)
+            <div class="col-12 mb-3">
+                <div class="alert alert-info py-2 px-3 small d-flex justify-content-between align-items-center mb-0">
+                    <span>
+                        <i class="fa fa-info-circle mr-1"></i> هذه المعاملة مرتبطة بطلب توظيف رسمي برقم: 
+                        <strong class="font-monospace">#{{ $contractTracker->jobApplication?->code ?? $contractTracker->job_application_id }}</strong>
+                    </span>
+                    <span class="badge badge-primary px-2 py-1">معتمد من الموقع</span>
+                </div>
+            </div>
+        @endif
+
         <x-form.input class="col-md-6 col-sm-12" title="كود المعاملة" :required="true">
             <input type="text" class="form-control form-control-solid font-monospace dir-ltr" placeholder="HS-78921" name="contract_code" value="{{ $contractTracker->contract_code }}" required/>
         </x-form.input>

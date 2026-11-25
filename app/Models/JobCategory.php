@@ -21,6 +21,7 @@ class JobCategory extends Model
         'name',
         'icon',
         'sort_order',
+        'display_location',
         'is_active',
     ];
 

@@ -23,8 +23,9 @@
             <div>
               <h6 class="fw-bold text-dark mb-1">الاتصال الهاتفي والخط الساخن</h6>
               <p class="text-muted small mb-1">متاح طوال أيام الأسبوع عدا الجمعة</p>
-              <a href="tel:+201018899770" class="fw-bold text-success font-monospace dir-ltr fs-6">0101 889 9770</a> - 
-              <a href="tel:+20224018899" class="fw-bold text-primary font-monospace dir-ltr fs-6">02 2401 8899</a>
+              @if(!empty($settings?->phone))
+                <a href="tel:{{ $settings->phone }}" class="fw-bold text-success font-monospace dir-ltr fs-6">{{ $settings->phone }}</a>
+              @endif
             </div>
           </div>
 
@@ -36,9 +37,14 @@
             <div>
               <h6 class="fw-bold text-dark mb-1">واتساب خدمة العملاء والتقديم</h6>
               <p class="text-muted small mb-1">إرسال السير الذاتية والاستفسارات الفورية</p>
-              <a href="https://wa.me/201018899770?text=السلام%20عليكم،%20أود%20الاستفسار%20عن%20عقود%20عمل%20إيطاليا" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm rounded-pill mt-1">
-                <i class="fa-brands fa-whatsapp me-1"></i> فتح محادثة واتساب فورية
-              </a>
+              @if(!empty($settings?->whatsapp))
+                @php
+                  $waNum = preg_replace('/[^0-9]/', '', $settings->whatsapp);
+                @endphp
+                <a href="https://wa.me/{{ $waNum }}?text=السلام%20عليكم،%20أود%20الاستفسار%20عن%20عقود%20عمل%20إيطاليا" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm rounded-pill mt-1">
+                  <i class="fa-brands fa-whatsapp me-1"></i> فتح محادثة واتساب فورية
+                </a>
+              @endif
             </div>
           </div>
 
@@ -49,7 +55,7 @@
             </div>
             <div>
               <h6 class="fw-bold text-dark mb-1">المقر الرئيسي للشركة</h6>
-              <p class="text-muted small mb-0">45 شارع عباس العقاد، الدور الرابع، مدينة نصر، القاهرة - جمهورية مصر العربية.</p>
+              <p class="text-muted small mb-0">{{ $settings?->address ?? '' }}</p>
             </div>
           </div>
 
@@ -60,7 +66,11 @@
             </div>
             <div>
               <h6 class="fw-bold text-dark mb-1">البريد الإلكتروني الرسمي</h6>
-              <p class="text-muted small mb-0">info@halanile.com • contracts@halanile.com</p>
+              <p class="text-muted small mb-0">
+                @if(!empty($settings?->email))
+                  <a href="mailto:{{ $settings->email }}" class="text-muted">{{ $settings->email }}</a>
+                @endif
+              </p>
             </div>
           </div>
         </div>
@@ -104,20 +114,19 @@
               <div class="col-md-6">
                 <div class="form-floating">
                   <select class="form-select" id="contactGov">
-                    <option value="القاهرة">القاهرة</option>
-                    <option value="الجيزة">الجيزة</option>
-                    <option value="الإسكندرية">الإسكندرية</option>
-                    <option value="الشرقية">الشرقية</option>
-                    <option value="الغربية">الغربية</option>
-                    <option value="الدقهلية">الدقهلية</option>
-                    <option value="المنوفية">المنوفية</option>
-                    <option value="كفر الشيخ">كفر الشيخ</option>
-                    <option value="الفيوم">الفيوم</option>
-                    <option value="بني سويف">بني سويف</option>
-                    <option value="المنيا">المنيا</option>
-                    <option value="أسيوط">أسيوط</option>
-                    <option value="سوهاج">سوهاج</option>
-                    <option value="محافظة أخرى">محافظة أخرى</option>
+                    <option value="">اختر المحافظة (اختياري)</option>
+                    @if(isset($cities) && $cities->isNotEmpty())
+                      @foreach($cities as $city)
+                        <option value="{{ $city->id }}">{{ $city->name }}</option>
+                      @endforeach
+                    @else
+                      <option value="1">القاهرة</option>
+                      <option value="2">الجيزة</option>
+                      <option value="3">الإسكندرية</option>
+                      <option value="4">الشرقية</option>
+                      <option value="5">الغربية</option>
+                      <option value="6">الدقهلية</option>
+                    @endif
                   </select>
                   <label for="contactGov">محافظة الإقامة في مصر</label>
                 </div>

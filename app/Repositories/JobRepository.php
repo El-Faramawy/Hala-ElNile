@@ -47,6 +47,31 @@ class JobRepository
      */
     public function getAllActive(): Collection
     {
-        return $this->model->where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        return $this->model->where('is_active', true)->with('category')->orderBy('sort_order', 'asc')->get();
+    }
+
+    /**
+     * @return Collection<int, Job>
+     */
+    public function getActiveFiltered(?int $categoryId = null, ?string $search = null): Collection
+    {
+        $query = $this->model->newQuery()
+            ->with('category')
+            ->where('is_active', true);
+
+        if ($categoryId !== null) {
+            $query->where('job_category_id', $categoryId);
+        }
+
+        if ($search !== null && trim($search) !== '') {
+            $searchTerm = '%'.trim($search).'%';
+            $query->where(function (Builder $builder) use ($searchTerm): void {
+                $builder->where('title', 'like', $searchTerm)
+                    ->orWhere('city', 'like', $searchTerm)
+                    ->orWhere('description', 'like', $searchTerm);
+            });
+        }
+
+        return $query->orderBy('sort_order', 'asc')->latest('id')->get();
     }
 }

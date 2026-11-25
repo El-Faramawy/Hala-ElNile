@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             SettingSeeder::class,
             CitySeeder::class,
+            ItalyDestinationsSeeder::class,
             JobCategorySeeder::class,
             JobSeeder::class,
             TravelerSeeder::class,

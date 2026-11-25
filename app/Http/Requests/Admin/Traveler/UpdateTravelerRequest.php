@@ -23,6 +23,8 @@ class UpdateTravelerRequest extends FormRequest
             'governorate' => ['nullable', 'string', 'max:100'],
             'job_title' => ['required', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            'italy_city_id' => ['nullable', 'integer', 'exists:italy_cities,id'],
+            'italy_landmark_id' => ['nullable', 'integer', 'exists:italy_landmarks,id'],
             'badge' => ['nullable', 'string', 'max:100'],
             'landmark_image' => ['nullable', 'image', 'max:2048'],
             'avatar' => ['nullable', 'image', 'max:2048'],

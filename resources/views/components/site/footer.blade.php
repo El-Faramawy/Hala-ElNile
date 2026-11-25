@@ -11,18 +11,22 @@
           شركة هلا النيل لإلحاق العمالة المصرية بالخارج. ترخيص وزارة القوى العاملة رقم (912 شركات). التخصص الأقوى والأشمل في عقود العمل الرسمية بإيطاليا وتسهيل كافة إجراءات الإقامة والتأشيرة.
         </p>
         <div class="d-flex align-items-center gap-2">
-          <a href="https://wa.me/201018899770" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm rounded-circle footer-social-btn" aria-label="واتساب">
-            <i class="fa-brands fa-whatsapp"></i>
-          </a>
-          <a href="#" class="btn btn-outline-light btn-sm rounded-circle footer-social-btn" aria-label="فيسبوك">
-            <i class="fa-brands fa-facebook-f"></i>
-          </a>
-          <a href="#" class="btn btn-outline-light btn-sm rounded-circle footer-social-btn" aria-label="تيليجرام">
-            <i class="fa-brands fa-telegram"></i>
-          </a>
-          <a href="#" class="btn btn-outline-light btn-sm rounded-circle footer-social-btn" aria-label="يوتيوب">
-            <i class="fa-brands fa-youtube"></i>
-          </a>
+          @if(!empty($settings?->whatsapp))
+            @php $waNum = preg_replace('/[^0-9]/', '', $settings->whatsapp); @endphp
+            <x-site.footer-social-link href="https://wa.me/{{ $waNum }}" icon="fa-brands fa-whatsapp" label="واتساب" />
+          @endif
+          @if(!empty($settings?->facebook))
+            <x-site.footer-social-link :href="$settings->facebook" icon="fa-brands fa-facebook-f" label="فيسبوك" />
+          @endif
+          @if(!empty($settings?->twitter))
+            <x-site.footer-social-link :href="$settings->twitter" icon="fa-brands fa-x-twitter" label="تويتر" />
+          @endif
+          @if(!empty($settings?->youtube))
+            <x-site.footer-social-link :href="$settings->youtube" icon="fa-brands fa-youtube" label="يوتيوب" />
+          @endif
+          @if(!empty($settings?->instagram))
+            <x-site.footer-social-link :href="$settings->instagram" icon="fa-brands fa-instagram" label="إنستغرام" />
+          @endif
         </div>
       </div>
 
@@ -30,12 +34,12 @@
       <div class="col-lg-2 col-md-6 col-6">
         <h5 class="footer-title">روابط سريعة</h5>
         <ul class="footer-links">
-          <li><a href="#hero"><i class="fa-solid fa-angle-left"></i> الرئيسية</a></li>
-          <li><a href="#about"><i class="fa-solid fa-angle-left"></i> من نحن وتراخيصنا</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-angle-left"></i> الوظائف المتاحة</a></li>
-          <li><a href="#steps"><i class="fa-solid fa-angle-left"></i> مراحل السفر</a></li>
-          <li><a href="#travelers"><i class="fa-solid fa-angle-left"></i> مسافرونا بإيطاليا</a></li>
-          <li><a href="#tracker"><i class="fa-solid fa-angle-left"></i> تتبع حالة العقد</a></li>
+          <x-site.footer-link href="#hero" label="الرئيسية" />
+          <x-site.footer-link href="#about" label="من نحن وتراخيصنا" />
+          <x-site.footer-link href="#jobs" label="الوظائف المتاحة" />
+          <x-site.footer-link href="#steps" label="مراحل السفر" />
+          <x-site.footer-link href="#travelers" label="مسافرونا بإيطاليا" />
+          <x-site.footer-link href="#tracker" label="تتبع حالة العقد" />
         </ul>
       </div>
 
@@ -43,12 +47,12 @@
       <div class="col-lg-3 col-md-6 col-6">
         <h5 class="footer-title">قطاعات العمل بإيطاليا</h5>
         <ul class="footer-links">
-          <li><a href="#jobs"><i class="fa-solid fa-utensils"></i> المطاعم والمطابخ الإيطالية</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-seedling"></i> الزراعة ومزارع العنب والزيتون</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-trowel-bricks"></i> المقاولات والبناء والتشييد</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-truck-moving"></i> النقل اللوجستي والشاحنات</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-hotel"></i> الضيافة والمنتجعات السياحية</a></li>
-          <li><a href="#jobs"><i class="fa-solid fa-wrench"></i> الصيانة الكهربائية والميكانيكية</a></li>
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-utensils" label="المطاعم والمطابخ الإيطالية" />
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-seedling" label="الزراعة ومزارع العنب والزيتون" />
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-trowel-bricks" label="المقاولات والبناء والتشييد" />
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-truck-moving" label="النقل اللوجستي والشاحنات" />
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-hotel" label="الضيافة والمنتجعات السياحية" />
+          <x-site.footer-link href="#jobs" icon="fa-solid fa-wrench" label="الصيانة الكهربائية والميكانيكية" />
         </ul>
       </div>
 
@@ -56,10 +60,14 @@
       <div class="col-lg-3 col-md-6">
         <h5 class="footer-title">بيانات الترخيص المعتمد</h5>
         <p class="small text-white-50 mb-2">
-          <strong class="text-white">جهة الترخيص:</strong> وزارة القوى العاملة المصرية<br>
-          <strong class="text-white">رقم الترخيص:</strong> 912 شركات فئة (أ)<br>
-          <strong class="text-white">السجل التجاري:</strong> 104522 استثمار القاهرة<br>
-          <strong class="text-white">العنوان:</strong> 45 شارع عباس العقاد، مدينة نصر، القاهرة
+          <x-site.footer-info-item label="جهة الترخيص" value="وزارة القوى العاملة المصرية" />
+          <x-site.footer-info-item label="رقم الترخيص" value="912 شركات فئة (أ)" />
+          @if(!empty($settings?->commercial_register))
+            <x-site.footer-info-item label="السجل التجاري" :value="$settings->commercial_register" />
+          @endif
+          @if(!empty($settings?->address))
+            <x-site.footer-info-item label="العنوان" :value="$settings->address" />
+          @endif
         </p>
         <div class="p-2 rounded-2 bg-white bg-opacity-10 border border-white border-opacity-10 mt-3 text-center small text-light">
           <i class="fa-solid fa-shield-halved text-success me-1"></i> مصنف بالقائمة البيضاء للشركات القانونية

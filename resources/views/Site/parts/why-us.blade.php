@@ -13,82 +13,52 @@
 
     <div class="row g-4">
       <!-- Feature 1 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-1">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-file-contract"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">عقود فلوتسي ونولا أوستا رسمية</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            طلب الاستقدام يُقدم عبر حساب صاحب العمل الإيطالي على بوابة وزارة الداخلية الإيطالية، وتصدر الموافقة المبدئية (Nulla Osta) باسمك ورقم جوازك مباشرة من المحافظة الإيطالية المختصة (Prefettura).
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="1"
+        icon="fa-solid fa-file-contract"
+        title="عقود فلوتسي ونولا أوستا رسمية"
+        description="طلب الاستقدام يُقدم عبر حساب صاحب العمل الإيطالي على بوابة وزارة الداخلية الإيطالية، وتصدر الموافقة المبدئية (Nulla Osta) باسمك ورقم جوازك مباشرة من المحافظة الإيطالية المختصة (Prefettura)."
+      />
 
       <!-- Feature 2 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-2">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-house-circle-check"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">سكن معتمد قانونياً (Idoneità)</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            لا نسلمك التأشيرة حتى نتأكد من إصدار شهادة مطابقة السكن في إيطاليا (Certificato Idoneità Alloggiativa). سكنك مجهز ومسجل رسمياً لدى البلدية لتفادي أي مشكلات قانونية.
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="2"
+        icon="fa-solid fa-house-circle-check"
+        title="سكن معتمد قانونياً (Idoneità)"
+        description="لا نسلمك التأشيرة حتى نتأكد من إصدار شهادة مطابقة السكن في إيطاليا (Certificato Idoneità Alloggiativa). سكنك مجهز ومسجل رسمياً لدى البلدية لتفادي أي مشكلات قانونية."
+      />
 
       <!-- Feature 3 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-3">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-language"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">تأهيل لغوي ومقابلة السفارة</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            نوفر دورة مكثفة مجانية في المصطلحات الإيطالية الأساسية الخاصة بمهنتك، مع تدريب عملي دقيق على المقابلة القنصلية وإجراءات أخذ البصمة البيومترية في السفارة الإيطالية.
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="3"
+        icon="fa-solid fa-language"
+        title="تأهيل لغوي ومقابلة السفارة"
+        description="نوفر دورة مكثفة مجانية في المصطلحات الإيطالية الأساسية الخاصة بمهنتك، مع تدريب عملي دقيق على المقابلة القنصلية وإجراءات أخذ البصمة البيومترية في السفارة الإيطالية."
+      />
 
       <!-- Feature 4 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-1">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-plane-arrival"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">استقبال مطار ومرافقة بإيطاليا</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            لن تكون بمفردك عند الهبوط! مندوب شركة هلا النيل ينتظرك بصالة الوصول في مطار ميلانو (مالبينسا) أو روما (فيوميتشينو)، ويصحبك مباشرة إلى مقر السكن وموقع العمل.
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="1"
+        icon="fa-solid fa-plane-arrival"
+        title="استقبال مطار ومرافقة بإيطاليا"
+        description="لن تكون بمفردك عند الهبوط! مندوب شركة هلا النيل ينتظرك بصالة الوصول في مطار ميلانو (مالبينسا) أو روما (فيوميتشينو)، ويصحبك مباشرة إلى مقر السكن وموقع العمل."
+      />
 
       <!-- Feature 5 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-2">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-address-card"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">استخراج الإقامة والكود الضريبي</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            نساعدك في الأيام الأولى على توقيع عقد الإقامة (Contratto di Soggiorno)، استخراج الكود الضريبي الإيطالي (Codice Fiscale)، وفتح حساب بنكي إيطالي لتحويل راتبك.
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="2"
+        icon="fa-solid fa-address-card"
+        title="استخراج الإقامة والكود الضريبي"
+        description="نساعدك في الأيام الأولى على توقيع عقد الإقامة (Contratto di Soggiorno)، استخراج الكود الضريبي الإيطالي (Codice Fiscale)، وفتح حساب بنكي إيطالي لتحويل راتبك."
+      />
 
       <!-- Feature 6 -->
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card reveal-on-scroll stagger-3">
-          <div class="feature-icon-box">
-            <i class="fa-solid fa-shield-virus"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-3">تأمين صحي حكومي إيطالي</h5>
-          <p class="text-muted small leading-relaxed mb-0">
-            تتمتع برعاية صحية كاملة في المستشفيات والمراكز الطبية الإيطالية عبر التسجيل في النظام الصحي الوطني (Servizio Sanitario Nazionale - SSN) وحصولك على البطاقة الصحية (Tessera Sanitaria).
-          </p>
-        </div>
-      </div>
+      <x-site.feature-card
+        :stagger="3"
+        icon="fa-solid fa-shield-virus"
+        title="تأمين صحي حكومي إيطالي"
+        description="تتمتع برعاية صحية كاملة في المستشفيات والمراكز الطبية الإيطالية عبر التسجيل في النظام الصحي الوطني (Servizio Sanitario Nazionale - SSN) وحصولك على البطاقة الصحية (Tessera Sanitaria)."
+      />
     </div>
   </div>
 </section>

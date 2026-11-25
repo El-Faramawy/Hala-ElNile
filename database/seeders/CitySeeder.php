@@ -12,14 +12,14 @@ class CitySeeder extends Seeder
     public function run(): void
     {
         $egyptianCities = [
+            'المنوفية',
+            'الشرقية',
+            'الغربية',
             'القاهرة',
             'الجيزة',
             'الإسكندرية',
             'الدقهلية',
-            'الشرقية',
-            'المنوفية',
             'القليوبية',
-            'الغربية',
             'البحيرة',
             'كفر الشيخ',
             'دمياط',
@@ -47,7 +47,7 @@ class CitySeeder extends Seeder
                 ['name' => $cityName],
                 [
                     'sort_order' => $order++,
-                    'is_active'  => true,
+                    'is_active' => true,
                 ]
             );
         }

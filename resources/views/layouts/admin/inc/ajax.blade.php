@@ -1,12 +1,23 @@
+@php
+    $createRoute = Route::has("$url.create") ? route("$url.create") : (Route::has("accounting.$url.create") ? route("accounting.$url.create") : null);
+    $destroyRoute = Route::has("$url.destroy") ? route("$url.destroy", ":id") : (Route::has("accounting.$url.destroy") ? route("accounting.$url.destroy", ":id") : null);
+    $multiDeleteRoute = Route::has("$url.multiDelete") ? route("$url.multiDelete") : (Route::has("accounting.$url.multiDelete") ? route("accounting.$url.multiDelete") : null);
+    $editRoute = Route::has("$url.edit") ? route("$url.edit", ":id") : (Route::has("accounting.$url.edit") ? route("accounting.$url.edit", ":id") : null);
+@endphp
 <script>
+    var createUrlPattern = @json($createRoute);
+    var destroyUrlPattern = @json($destroyRoute);
+    var multiDeleteUrlPattern = @json($multiDeleteRoute);
+    var editUrlPattern = @json($editRoute);
+
     var loader = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:35px 20px;gap:12px;">
-            <img src="{{url('Admin')}}/imgs/car-loader.gif" alt="جاري التحميل" style="width:120px;height:auto;display:block;object-fit:contain;">
-            <p style="font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#1E3A1A;margin:0;">جاري تحميل البيانات...</p>
-            <div style="display:flex;gap:5px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:#76C419;animation:gl-bounce 1.2s ease-in-out infinite;"></span>
-                <span style="width:7px;height:7px;border-radius:50%;background:#76C419;animation:gl-bounce 1.2s ease-in-out infinite 0.2s;"></span>
-                <span style="width:7px;height:7px;border-radius:50%;background:#76C419;animation:gl-bounce 1.2s ease-in-out infinite 0.4s;"></span>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;gap:12px;">
+            <img src="{{ asset('Admin/imgs/loader.webp') }}" alt="جاري التحميل" style="width:160px;max-width:90%;height:auto;display:block;border-radius:10px;box-shadow:0 8px 18px rgba(11,34,61,0.15);">
+            <p style="font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#0b223d;margin:0;">جاري تحميل البيانات...</p>
+            <div style="display:flex;gap:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:#008c45;animation:gl-bounce 1.2s ease-in-out infinite;"></span>
+                <span style="width:8px;height:8px;border-radius:50%;background:#d4af37;animation:gl-bounce 1.2s ease-in-out infinite 0.2s;"></span>
+                <span style="width:8px;height:8px;border-radius:50%;background:#0b223d;animation:gl-bounce 1.2s ease-in-out infinite 0.4s;"></span>
             </div>
         </div>
     `;
@@ -15,10 +26,10 @@
     var isPreloadingCreate = false;
 
     function preloadCreateForm() {
-        if (isPreloadingCreate) return;
+        if (isPreloadingCreate || !createUrlPattern) return;
         isPreloadingCreate = true;
         $.ajax({
-            url: "{{ route("$url.create") }}",
+            url: createUrlPattern,
             type: 'GET',
             success: function (html) {
                 createFormCache = html;
@@ -143,7 +154,14 @@
         var table = $("#exportexample").DataTable({
             bLengthChange: true,
             serverSide: true,
-            ajax: window.location.href,
+            ajax: {
+                url: window.location.href,
+                data: function (d) {
+                    if (typeof originalDataFunc === 'function') {
+                        originalDataFunc(d);
+                    }
+                }
+            },
             columns: columns,
             // order: [
             //     [0, "desc"]
@@ -153,7 +171,7 @@
                     previous: "<i class='fa fa-angle-right ml-1'></i> السابق",
                     next: "التالي <i class='fa fa-angle-left mr-1'></i>"
                 },
-                "sProcessing": "جاري التحميل ..",
+                "sProcessing": '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;gap:6px;"><img src="{{ asset('Admin/imgs/loader.webp') }}" style="width:110px;height:auto;border-radius:8px;"><span style="font-family:\'Cairo\',sans-serif;font-weight:700;font-size:13px;color:#0b223d;">جاري التحميل...</span></div>',
                 "sLengthMenu": "اظهار _MENU_ سجل",
                 "sZeroRecords": "لا يوجد نتائج",
                 "sInfo": "اظهار _START_ الى  _END_ من _TOTAL_ سجل",
@@ -246,6 +264,8 @@
             pageLength: 10,
 
         });
+
+        window.table = table;
 
         table.buttons().container().appendTo( '#exportexample_wrapper .col-md-6:eq(0)' );
 
@@ -357,17 +377,26 @@
     }
 
     $(document).off('click', '#addBtn').on('click', '#addBtn', function () {
+        if (!createUrlPattern) return;
         $('#Modal').modal('show');
         if (createFormCache) {
             $('#form-load').html(createFormCache);
             initModalPlugins();
         } else {
             $('#form-load').html(loader);
-            $('#form-load').load("{{route("$url.create")}}", function (response) {
+            $('#form-load').load(createUrlPattern, function (response) {
                 createFormCache = response;
                 initModalPlugins();
             });
         }
+    });
+
+    window.currentSubmitAction = 'save';
+    $(document).on('click', '#submitAndPrint', function () {
+        window.currentSubmitAction = 'save_and_print';
+    });
+    $(document).on('click', '#submit', function () {
+        window.currentSubmitAction = 'save';
     });
 
     $(document).off('submit', 'form#form').on('submit', 'form#form', function (e) {
@@ -380,8 +409,10 @@
         $form.data('is_submitting', true);
 
         var $btn = $('#submit');
+        var $printBtn = $('#submitAndPrint');
         var formData = new FormData(this);
         var url = $form.attr('action');
+        var submitAction = window.currentSubmitAction || 'save';
 
         $.ajax({
             url: url,
@@ -390,6 +421,7 @@
             beforeSend: function () {
                 $('#global-loader').addClass('active');
                 $btn.prop('disabled', true);
+                $printBtn.prop('disabled', true);
             },
             complete: function () {
             },
@@ -397,9 +429,16 @@
                 window.setTimeout(function () {
                     $('#global-loader').removeClass('active');
                     $btn.prop('disabled', false);
+                    $printBtn.prop('disabled', false);
                     $form.data('is_submitting', false);
                     $('#Modal').modal('hide');
                     my_toaster(data.message);
+
+                    if (submitAction === 'save_and_print' && (data.receipt_url || data.voucher_url)) {
+                        window.open(data.receipt_url || data.voucher_url, '_blank');
+                    }
+                    window.currentSubmitAction = 'save';
+
                     createFormCache = null;
                     preloadCreateForm();
                     $('#exportexample').DataTable().ajax.reload(null, false);
@@ -408,6 +447,7 @@
             error: function (data) {
                 $('#global-loader').removeClass('active');
                 $btn.prop('disabled', false);
+                $printBtn.prop('disabled', false);
                 $form.data('is_submitting', false);
                 $('#form-load > .linear-background').hide(loader);
                 $btn.html('حفظ');
@@ -428,7 +468,8 @@
 
         var swalInstance = window.Swal || window.swal;
         var executeSingleDelete = function () {
-            var url = '{{ route("$url.destroy", ":id") }}'.replace(':id', id);
+            if (!destroyUrlPattern) return;
+            var url = destroyUrlPattern.replace(':id', id);
             $.ajax({
                 url: url,
                 type: 'DELETE',
@@ -493,7 +534,8 @@
 
         var swalInstance = window.Swal || window.swal;
         var executeBulkDelete = function () {
-            var url = '{{ route("$url.multiDelete") }}';
+            if (!multiDeleteUrlPattern) return;
+            var url = multiDeleteUrlPattern;
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -545,11 +587,12 @@
     });
 
     $(document).off('click', '#editBtn').on('click', '#editBtn', function () {
+        if (!editUrlPattern) return;
         var id = $(this).data('id');
         $('#form-load').html(loader);
         $('#Modal').modal('show');
 
-        var url = "{{route("$url.edit",':id')}}".replace(':id', id);
+        var url = editUrlPattern.replace(':id', id);
         $('#form-load').load(url, function () {
             initModalPlugins();
         });

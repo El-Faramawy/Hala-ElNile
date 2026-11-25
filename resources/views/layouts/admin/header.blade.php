@@ -27,6 +27,10 @@
                     </a>
                 </div><!-- FULL-SCREEN -->
 
+                <a href="{{ route('accounting.dashboard') }}" class="btn btn-sm btn-outline-success mx-2 d-none d-sm-inline-flex align-items-center font-weight-bold" style="border-radius: 6px; padding: 6px 14px;">
+                    <i class="fa fa-calculator ml-1"></i> المنظومة المالية
+                </a>
+
                 <div class="dropdown profile-1">
                     <a href="#" data-toggle="dropdown" class="nav-link pl-2 pr-2  leading-none d-flex">
 									<span>

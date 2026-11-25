@@ -7,6 +7,7 @@ namespace App\Services\Job;
 use App\Models\Job;
 use App\Repositories\JobRepository;
 use App\Traits\UploadTrait;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Yajra\DataTables\DataTables;
@@ -65,5 +66,26 @@ class JobService
     public function deleteMultiple(array $ids): int
     {
         return $this->jobRepository->deleteMultiple($ids);
+    }
+
+    /**
+     * @return Collection<int, Job>
+     */
+    public function getAllActive(): Collection
+    {
+        return $this->jobRepository->getAllActive();
+    }
+
+    /**
+     * @return Collection<int, Job>
+     */
+    public function getActiveFiltered(?int $categoryId = null, ?string $search = null): Collection
+    {
+        return $this->jobRepository->getActiveFiltered($categoryId, $search);
+    }
+
+    public function findById(int $id): ?Job
+    {
+        return $this->jobRepository->findById($id);
     }
 }

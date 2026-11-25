@@ -35,54 +35,41 @@
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-sm-6">
-            <div class="about-feature-box reveal-on-scroll stagger-1">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="fa-solid fa-check-circle text-success fs-5"></i>
-                <h6 class="fw-bold mb-0">اعتماد القنصلية الإيطالية</h6>
-              </div>
-              <p class="small text-muted mb-0">كافة عقودنا وتأشيراتنا تصدر مباشرة عبر القنوات القنصلية الرسمية بالقاهرة والإسكندرية.</p>
-            </div>
-          </div>
+          <x-site.about-feature
+            :stagger="1"
+            title="اعتماد القنصلية الإيطالية"
+            description="كافة عقودنا وتأشيراتنا تصدر مباشرة عبر القنوات القنصلية الرسمية بالقاهرة والإسكندرية."
+          />
 
-          <div class="col-sm-6">
-            <div class="about-feature-box reveal-on-scroll stagger-2">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="fa-solid fa-check-circle text-success fs-5"></i>
-                <h6 class="fw-bold mb-0">شراكات عمل حقيقية</h6>
-              </div>
-              <p class="small text-muted mb-0">عقود مباشرة مع أصحاب الأعمال في لومبارديا، لاتسيو، إميليا رومانيا وتوسكانا.</p>
-            </div>
-          </div>
+          <x-site.about-feature
+            :stagger="2"
+            title="شراكات عمل حقيقية"
+            description="عقود مباشرة مع أصحاب الأعمال في لومبارديا، لاتسيو، إميليا رومانيا وتوسكانا."
+          />
 
-          <div class="col-sm-6">
-            <div class="about-feature-box reveal-on-scroll stagger-3">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="fa-solid fa-check-circle text-success fs-5"></i>
-                <h6 class="fw-bold mb-0">لا رسوم قبل الموافقة</h6>
-              </div>
-              <p class="small text-muted mb-0">نلتزم بالحدود القانونية للرسوم وفقاً للوائح وزارة القوى العاملة وبدون أي مبالغات.</p>
-            </div>
-          </div>
+          <x-site.about-feature
+            :stagger="3"
+            title="لا رسوم قبل الموافقة"
+            description="نلتزم بالحدود القانونية للرسوم وفقاً للوائح وزارة القوى العاملة وبدون أي مبالغات."
+          />
 
-          <div class="col-sm-6">
-            <div class="about-feature-box reveal-on-scroll stagger-4">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="fa-solid fa-check-circle text-success fs-5"></i>
-                <h6 class="fw-bold mb-0">رعاية واستقبال بإيطاليا</h6>
-              </div>
-              <p class="small text-muted mb-0">فريقنا ومندوبونا في مطارات روما وميلانو يرافقونك حتى استلام السكن وبدء العمل.</p>
-            </div>
-          </div>
+          <x-site.about-feature
+            :stagger="4"
+            title="رعاية واستقبال بإيطاليا"
+            description="فريقنا ومندوبونا في مطارات روما وميلانو يرافقونك حتى استلام السكن وبدء العمل."
+          />
         </div>
 
         <div class="d-flex flex-wrap gap-3">
           <a href="#why-us" class="btn btn-primary px-4 py-3 rounded-pill">
             <i class="fa-solid fa-circle-check me-1"></i> استكشف مميزاتنا وضماناتك
           </a>
-          <a href="https://wa.me/201018899770" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary px-4 py-3 rounded-pill">
-            <i class="fa-brands fa-whatsapp text-success fs-5 me-1"></i> تواصل مع المدير التنفيذي
-          </a>
+          @if(!empty($settings?->whatsapp))
+            @php $waNum = preg_replace('/[^0-9]/', '', $settings->whatsapp); @endphp
+            <a href="https://wa.me/{{ $waNum }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary px-4 py-3 rounded-pill">
+              <i class="fa-brands fa-whatsapp text-success fs-5 me-1"></i> تواصل مع المدير التنفيذي
+            </a>
+          @endif
         </div>
       </div>
     </div>

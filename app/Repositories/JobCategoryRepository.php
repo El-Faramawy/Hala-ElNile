@@ -52,4 +52,28 @@ class JobCategoryRepository
             ->orderBy('sort_order', 'asc')
             ->get();
     }
+
+    /**
+     * @return Collection<int, JobCategory>
+     */
+    public function getActiveForWebsite(): Collection
+    {
+        return $this->model
+            ->where('is_active', true)
+            ->whereIn('display_location', ['website', 'both'])
+            ->orderBy('sort_order', 'asc')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, JobCategory>
+     */
+    public function getActiveForDashboard(): Collection
+    {
+        return $this->model
+            ->where('is_active', true)
+            ->whereIn('display_location', ['dashboard', 'both'])
+            ->orderBy('sort_order', 'asc')
+            ->get();
+    }
 }

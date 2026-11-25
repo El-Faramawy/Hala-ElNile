@@ -9,15 +9,18 @@ use App\Http\Requests\Admin\Common\MultiDeleteRequest;
 use App\Http\Requests\Admin\Job\StoreJobRequest;
 use App\Http\Requests\Admin\Job\UpdateJobRequest;
 use App\Models\Job;
-use App\Models\JobCategory;
 use App\Services\Job\JobService;
+use App\Services\JobCategory\JobCategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class JobController extends Controller
 {
-    public function __construct(protected JobService $jobService) {}
+    public function __construct(
+        protected JobService $jobService,
+        protected JobCategoryService $jobCategoryService
+    ) {}
 
     public function index(Request $request): View|JsonResponse
     {
@@ -30,7 +33,7 @@ class JobController extends Controller
 
     public function create(): View
     {
-        $categories = JobCategory::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $categories = $this->jobCategoryService->getJobCategoriesForDashboard();
 
         return view('Admin.Job.parts.create', compact('categories'));
     }
@@ -44,7 +47,7 @@ class JobController extends Controller
 
     public function edit(Job $job): View
     {
-        $categories = JobCategory::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $categories = $this->jobCategoryService->getJobCategoriesForDashboard();
 
         return view('Admin.Job.parts.edit', compact('job', 'categories'));
     }

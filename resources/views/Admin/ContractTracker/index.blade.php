@@ -1,9 +1,9 @@
 @extends('layouts.admin.app')
-@section('page_title') تتبع العقود والمعاملات @endsection
+@section('page_title') العقود السارية @endsection
 
 @section('content')
     <x-list.card>
-        <x-list.card-header name="بوابة استعلام وتتبع معاملات إيطاليا" :add_button="true" :delete_button="true"></x-list.card-header>
+        <x-list.card-header name="العقود السارية" :add_button="true" :delete_button="true"></x-list.card-header>
         <x-list.card-body :responsive="true">
             <th class="text-white"><input type="checkbox" id="master"></th>
             <th class="text-white">كود المعاملة</th>
@@ -18,7 +18,7 @@
         </x-list.card-body>
     </x-list.card>
 
-    <x-list.modal name="معاملة العقد" :save_button="true" size="modal-lg"></x-list.modal>
+    <x-list.modal name="العقد الساري" :save_button="true" size="modal-lg"></x-list.modal>
 @endsection
 
 @push('admin_js')
@@ -35,6 +35,19 @@
             {data: 'status', name: 'status'},
             {data: 'action', name: 'action', orderable: false, searchable: false},
         ];
+
+        $(document).ready(function () {
+            var urlParams = new URLSearchParams(window.location.search);
+            var searchParam = urlParams.get('search');
+            if (searchParam) {
+                setTimeout(function () {
+                    var dt = $('#exportexample').DataTable();
+                    if (dt) {
+                        dt.search(searchParam).draw();
+                    }
+                }, 500);
+            }
+        });
     </script>
     @include('layouts.admin.inc.ajax', ['url' => 'contract-trackers'])
 @endpush

@@ -19,19 +19,28 @@
 
       <!-- Contact Hotline & Address -->
       <div class="d-flex align-items-center gap-4">
-        <a href="tel:+201018899770" class="d-flex align-items-center gap-1">
-          <i class="fa-solid fa-phone text-success"></i>
-          <span class="font-monospace dir-ltr fw-bold">0101 889 9770</span>
-        </a>
-        <a href="https://wa.me/201018899770" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-1 text-success fw-bold">
-          <i class="fa-brands fa-whatsapp"></i>
-          <span>واتساب الاستقدام</span>
-        </a>
-        <span class="text-white-50">|</span>
-        <span class="small">
-          <i class="fa-solid fa-location-dot text-danger me-1"></i>
-          45 شارع عباس العقاد، مدينة نصر، القاهرة
-        </span>
+        @if(!empty($settings?->phone))
+          <a href="tel:{{ $settings->phone }}" class="d-flex align-items-center gap-1">
+            <i class="fa-solid fa-phone text-success"></i>
+            <span class="font-monospace dir-ltr fw-bold">{{ $settings->phone }}</span>
+          </a>
+        @endif
+
+        @if(!empty($settings?->whatsapp))
+          @php $waNum = preg_replace('/[^0-9]/', '', $settings->whatsapp); @endphp
+          <a href="https://wa.me/{{ $waNum }}" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-1 text-success fw-bold">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>واتساب الاستقدام</span>
+          </a>
+        @endif
+
+        @if(!empty($settings?->address))
+          <span class="text-white-50">|</span>
+          <span class="small">
+            <i class="fa-solid fa-location-dot text-danger me-1"></i>
+            {{ $settings->address }}
+          </span>
+        @endif
       </div>
     </div>
   </div>

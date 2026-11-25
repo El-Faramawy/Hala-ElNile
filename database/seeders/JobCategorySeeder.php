@@ -13,28 +13,28 @@ class JobCategorySeeder extends Seeder
     {
         $categories = [
             [
-                'name'       => 'مطاعم وفندقة',
-                'icon'       => 'fa-solid fa-utensils',
+                'name' => 'مطاعم وفندقة',
+                'icon' => 'fa-solid fa-utensils',
                 'sort_order' => 1,
             ],
             [
-                'name'       => 'عمالة زراعية',
-                'icon'       => 'fa-solid fa-seedling',
+                'name' => 'عمالة زراعية',
+                'icon' => 'fa-solid fa-seedling',
                 'sort_order' => 2,
             ],
             [
-                'name'       => 'تشييد وبناء',
-                'icon'       => 'fa-solid fa-trowel-bricks',
+                'name' => 'تشييد وبناء',
+                'icon' => 'fa-solid fa-trowel-bricks',
                 'sort_order' => 3,
             ],
             [
-                'name'       => 'نقل ولوجستيات',
-                'icon'       => 'fa-solid fa-truck-fast',
+                'name' => 'نقل ولوجستيات',
+                'icon' => 'fa-solid fa-truck-fast',
                 'sort_order' => 4,
             ],
             [
-                'name'       => 'صيانة ومهن حرفية',
-                'icon'       => 'fa-solid fa-wrench',
+                'name' => 'صيانة ومهن حرفية',
+                'icon' => 'fa-solid fa-wrench',
                 'sort_order' => 5,
             ],
         ];
@@ -43,9 +43,9 @@ class JobCategorySeeder extends Seeder
             JobCategory::updateOrCreate(
                 ['name' => $categoryData['name']],
                 [
-                    'icon'       => $categoryData['icon'],
+                    'icon' => $categoryData['icon'],
                     'sort_order' => $categoryData['sort_order'],
-                    'is_active'  => true,
+                    'is_active' => true,
                 ]
             );
         }

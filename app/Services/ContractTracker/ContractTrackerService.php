@@ -17,11 +17,23 @@ class ContractTrackerService
     {
         $query = $this->repository->getDataTableQuery();
 
+        return $this->buildDataTable($query);
+    }
+
+    public function getActiveContractsDataTable(): JsonResponse
+    {
+        $query = $this->repository->getActiveDataTableQuery();
+
+        return $this->buildDataTable($query);
+    }
+
+    protected function buildDataTable($query): JsonResponse
+    {
         return DataTables::of($query)
-            ->addColumn('checkbox', fn (ContractTracker $tracker): string => tableCheckbox($tracker->id))
-            ->addColumn('contract_code_badge', fn (ContractTracker $tracker): string => '<span class="badge badge-light border text-primary font-monospace fs-12 px-2 py-1">'.htmlspecialchars($tracker->contract_code).'</span>')
-            ->addColumn('passport_badge', fn (ContractTracker $tracker): string => '<span class="font-monospace text-dark font-weight-bold">'.htmlspecialchars($tracker->passport_number).'</span>')
-            ->addColumn('step_badge', function (ContractTracker $tracker): string {
+            ->addColumn('checkbox', fn (ContractTracker $contractTracker): string => tableCheckbox($contractTracker->id))
+            ->addColumn('contract_code_badge', fn (ContractTracker $contractTracker): string => '<span class="badge badge-light border text-primary font-monospace fs-12 px-2 py-1">'.htmlspecialchars($contractTracker->contract_code).'</span>')
+            ->addColumn('passport_badge', fn (ContractTracker $contractTracker): string => '<span class="font-monospace text-dark font-weight-bold">'.htmlspecialchars($contractTracker->passport_number).'</span>')
+            ->addColumn('step_badge', function (ContractTracker $contractTracker): string {
                 $labels = [
                     1 => '1. استلام وفحص الملف',
                     2 => '2. التقديم بنظام فلوتسي',
@@ -29,12 +41,12 @@ class ContractTrackerService
                     4 => '4. استلام التأشيرة الإيطالية',
                     5 => '5. السفر والاستقرار بإيطاليا',
                 ];
-                $label = $labels[$tracker->step] ?? 'المرحلة '.$tracker->step;
+                $label = $labels[$contractTracker->step] ?? 'المرحلة '.$contractTracker->step;
 
                 return '<span class="badge badge-info px-2 py-1">'.$label.'</span>';
             })
-            ->addColumn('status', fn (ContractTracker $tracker): string => tableStatus((bool) $tracker->is_active))
-            ->addColumn('action', fn (ContractTracker $tracker): string => tableAction($tracker->id, true, true))
+            ->addColumn('status', fn (ContractTracker $contractTracker): string => tableStatus((bool) $contractTracker->is_active))
+            ->addColumn('action', fn (ContractTracker $contractTracker): string => tableAction($contractTracker->id, true, true))
             ->escapeColumns([])
             ->make(true);
     }
@@ -57,5 +69,10 @@ class ContractTrackerService
     public function deleteMultiple(array $ids): int
     {
         return $this->repository->deleteMultiple($ids);
+    }
+
+    public function findByPassportOrCode(string $identifier): ?ContractTracker
+    {
+        return $this->repository->findByPassportOrCode(trim($identifier));
     }
 }

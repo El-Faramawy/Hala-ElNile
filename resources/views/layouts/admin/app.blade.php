@@ -13,7 +13,7 @@
 <!-- GLOBAL-LOADER -->
 <div id="global-loader">
     <div class="gl-box">
-        <img src="{{url('Admin')}}/imgs/car-loader.gif" alt="جاري التحميل" class="gl-car-img">
+        <img src="{{ asset('Admin/imgs/loader.webp') }}" alt="جاري التحميل" class="gl-plane-img">
         <div class="gl-dots">
             <div class="gl-dot"></div>
             <div class="gl-dot"></div>

@@ -18,6 +18,7 @@ class JobApplication extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'code',
         'job_id',
         'city_id',
         'job_title',
@@ -25,8 +26,13 @@ class JobApplication extends Model
         'phone',
         'age',
         'passport_situation',
+        'passport_number',
         'notes',
         'status',
+        'cancellation_reason',
+        'stage_history',
+        'contract_tracker_id',
+        'converted_to_contract_at',
         'admin_notes',
     ];
 
@@ -34,6 +40,8 @@ class JobApplication extends Model
     {
         return [
             'age' => 'integer',
+            'stage_history' => 'array',
+            'converted_to_contract_at' => 'datetime',
         ];
     }
 
@@ -45,5 +53,10 @@ class JobApplication extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function contractTracker(): BelongsTo
+    {
+        return $this->belongsTo(ContractTracker::class, 'contract_tracker_id');
     }
 }

@@ -25,6 +25,13 @@ class JobCategoryService
         return DataTables::of($query)
             ->addColumn('checkbox', fn (JobCategory $jobCategory): string => tableCheckbox($jobCategory->id))
             ->addColumn('icon', fn (JobCategory $jobCategory): string => tableIcon($jobCategory->icon, 'fa-solid fa-briefcase'))
+            ->addColumn('display_location_badge', function (JobCategory $jobCategory): string {
+                return match ($jobCategory->display_location) {
+                    'website' => '<span class="badge badge-info px-2 py-1">الموقع الإلكتروني فقط</span>',
+                    'dashboard' => '<span class="badge badge-warning text-dark px-2 py-1">لوحة التحكم فقط</span>',
+                    default => '<span class="badge badge-primary px-2 py-1">الموقع واللوحة معاً</span>',
+                };
+            })
             ->addColumn('status', fn (JobCategory $jobCategory): string => tableStatus((bool) $jobCategory->is_active))
             ->addColumn('action', fn (JobCategory $jobCategory): string => tableAction($jobCategory->id, true, true))
             ->escapeColumns([])
@@ -66,5 +73,15 @@ class JobCategoryService
     public function getJobCategories(): Collection
     {
         return $this->jobCategoryRepository->getAllActive();
+    }
+
+    public function getJobCategoriesForWebsite(): Collection
+    {
+        return $this->jobCategoryRepository->getActiveForWebsite();
+    }
+
+    public function getJobCategoriesForDashboard(): Collection
+    {
+        return $this->jobCategoryRepository->getActiveForDashboard();
     }
 }

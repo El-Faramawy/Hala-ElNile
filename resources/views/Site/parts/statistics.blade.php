@@ -6,60 +6,40 @@
     <div class="stats-strip reveal-on-scroll">
       <div class="row g-4 align-items-center">
         <!-- Stat 1 -->
-        <div class="col-6 col-lg-3">
-          <div class="stat-card">
-            <div class="stat-icon bg-soft-green text-success">
-              <i class="fa-solid fa-passport"></i>
-            </div>
-            <div class="stat-number-wrapper">
-              <span class="stat-number" data-target="3850">0</span>
-              <span class="stat-plus">+</span>
-            </div>
-            <div class="stat-label">مسافر استلموا عقودهم وسافروا بنجاح</div>
-          </div>
-        </div>
+        <x-site.stat-card
+          icon="fa-solid fa-passport"
+          iconClass="bg-soft-green text-success"
+          :target="3850"
+          plus="+"
+          label="مسافر استلموا عقودهم وسافروا بنجاح"
+        />
 
         <!-- Stat 2 -->
-        <div class="col-6 col-lg-3">
-          <div class="stat-card">
-            <div class="stat-icon bg-primary-subtle text-primary">
-              <i class="fa-solid fa-award"></i>
-            </div>
-            <div class="stat-number-wrapper">
-              <span class="stat-number" data-target="100">0</span>
-              <span class="stat-plus">%</span>
-            </div>
-            <div class="stat-label">عقود حكومية وقانونية 100% موثقة</div>
-          </div>
-        </div>
+        <x-site.stat-card
+          icon="fa-solid fa-award"
+          iconClass="bg-primary-subtle text-primary"
+          :target="100"
+          plus="%"
+          label="عقود حكومية وقانونية 100% موثقة"
+        />
 
         <!-- Stat 3 -->
-        <div class="col-6 col-lg-3">
-          <div class="stat-card">
-            <div class="stat-icon bg-warning-subtle text-warning">
-              <i class="fa-solid fa-calendar-check"></i>
-            </div>
-            <div class="stat-number-wrapper">
-              <span class="stat-number" data-target="14">0</span>
-              <span class="stat-plus">+ سنة</span>
-            </div>
-            <div class="stat-label">خبرة متخصصة حصرياً في ملف إيطاليا</div>
-          </div>
-        </div>
+        <x-site.stat-card
+          icon="fa-solid fa-calendar-check"
+          iconClass="bg-warning-subtle text-warning"
+          :target="14"
+          plus="+ سنة"
+          label="خبرة متخصصة حصرياً في ملف إيطاليا"
+        />
 
         <!-- Stat 4 -->
-        <div class="col-6 col-lg-3">
-          <div class="stat-card">
-            <div class="stat-icon bg-danger-subtle text-danger">
-              <i class="fa-solid fa-handshake-angle"></i>
-            </div>
-            <div class="stat-number-wrapper">
-              <span class="stat-number" data-target="85">0</span>
-              <span class="stat-plus">+</span>
-            </div>
-            <div class="stat-label">شريك وصاحب عمل إيطالي معتمد</div>
-          </div>
-        </div>
+        <x-site.stat-card
+          icon="fa-solid fa-handshake-angle"
+          iconClass="bg-danger-subtle text-danger"
+          :target="85"
+          plus="+"
+          label="شريك وصاحب عمل إيطالي معتمد"
+        />
       </div>
     </div>
   </div>

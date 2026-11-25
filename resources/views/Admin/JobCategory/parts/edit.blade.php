@@ -17,6 +17,14 @@
             </select>
         </x-form.input>
 
+        <x-form.input class="col-sm-6" title="أين يظهر القسم؟" :required="true">
+            <select name="display_location" class="form-control form-control-solid" required>
+                <option value="both" {{ ($jobCategory->display_location ?? 'both') === 'both' ? 'selected' : '' }}>الموقع ولوحة التحكم معاً (الكل)</option>
+                <option value="website" {{ ($jobCategory->display_location ?? '') === 'website' ? 'selected' : '' }}>في الموقع الإلكتروني فقط</option>
+                <option value="dashboard" {{ ($jobCategory->display_location ?? '') === 'dashboard' ? 'selected' : '' }}>في لوحة التحكم فقط</option>
+            </select>
+        </x-form.input>
+
         <x-form.input class="col-sm-6" title="أيقونة القسم (من أيقونات الموقع)" :required="false">
             <select name="icon" class="form-control form-control-solid">
                 <option value="fa-solid fa-utensils" {{ $jobCategory->icon === 'fa-solid fa-utensils' ? 'selected' : '' }}>مطاعم وفندقة (fa-solid fa-utensils)</option>

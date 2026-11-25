@@ -4,6 +4,19 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 0. Page Loader Dismissal
+  const pageLoader = document.getElementById('page-loader');
+  function dismissPageLoader() {
+    if (pageLoader && !pageLoader.classList.contains('loaded')) {
+      pageLoader.classList.add('loaded');
+      setTimeout(() => {
+        if (pageLoader.parentNode) pageLoader.remove();
+      }, 450);
+    }
+  }
+  window.addEventListener('load', dismissPageLoader);
+  setTimeout(dismissPageLoader, 1400); // Safety fallback
+
   // 1. Initialize Hero Swiper Slider
   const heroSwiperEl = document.querySelector('.hero-swiper');
   if (heroSwiperEl && typeof Swiper !== 'undefined') {
@@ -101,10 +114,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const spySections = document.querySelectorAll('section[id]');
 
   function handleScroll() {
-    const scrollY = window.scrollY;
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
 
     // Sticky navbar toggle
-    if (scrollY > 70) {
+    if (scrollY > 30) {
       mainNavbar && mainNavbar.classList.add('navbar-scrolled');
       backToTop && backToTop.classList.add('show');
     } else {
@@ -116,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (scrollProgressBar) {
       const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
-      scrollProgressBar.style.width = Math.min(progress, 100) + '%';
+      scrollProgressBar.style.width = Math.min(Math.max(progress, 0), 100) + '%';
     }
 
     // ScrollSpy: update active nav link
@@ -224,6 +237,13 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.reveal-on-scroll').forEach(el => el.classList.add('is-revealed'));
   }
 
+  // Safety fallback: ensure no element remains invisible if scroll observer is delayed or skipped
+  setTimeout(() => {
+    document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)').forEach(el => {
+      el.classList.add('is-revealed');
+    });
+  }, 1000);
+
   // 4. Render Jobs
   const jobsContainer = document.getElementById('jobsContainer');
   const jobFilterBtns = document.querySelectorAll('.job-filter-btn');
@@ -231,13 +251,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let currentCategory = 'all';
   let currentSearch = '';
+  let activeJobsData = [];
+  let searchDebounceTimer = null;
 
-  function renderJobsList() {
-    if (!jobsContainer || typeof IT_JOBS === 'undefined') return;
+  function drawJobsHtml(jobsList) {
+    if (!jobsContainer) return;
 
-    const filtered = filterJobs(currentCategory, currentSearch);
-
-    if (filtered.length === 0) {
+    if (!jobsList || jobsList.length === 0) {
       jobsContainer.innerHTML = `
         <div class="col-12 text-center py-5">
           <div class="empty-state p-4 p-md-5 rounded-4 bg-white shadow-sm border">
@@ -253,14 +273,22 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    jobsContainer.innerHTML = filtered.map((job, index) => `
+    jobsContainer.innerHTML = jobsList.map((job, index) => {
+      const salaryDisplay = job.salary_text || job.salary || 'راتب مجزي';
+      const housingDisplay = job.housing ? (job.housing.split(' ')[0] + ' ' + (job.housing.split(' ')[1] || '')) : 'سكن متوفر';
+      const hoursDisplay = job.hours || job.working_hours || '8 ساعات يومياً';
+      const badgeDisplay = job.badge || 'متاح للتقديم';
+      const categoryNameDisplay = job.categoryName || job.category_name || 'عام';
+      const typeDisplay = job.type || job.contract_type || 'عقد عمل معتمد';
+
+      return `
       <div class="col-lg-4 col-md-6 mb-4 job-card-enter" style="--i: ${Math.min(index, 8)}">
         <div class="card h-100 job-card border-0 shadow-sm rounded-4 overflow-hidden position-relative">
           <div class="job-card-img-wrapper position-relative">
             <img src="${job.image}" class="card-img-top job-img" alt="${job.title}" loading="lazy" decoding="async">
             <div class="job-overlay-gradient"></div>
             <span class="badge bg-gold text-dark fw-bold position-absolute top-0 end-0 m-3 shadow-sm px-3 py-2 rounded-pill">
-              <i class="fa-solid fa-star me-1"></i> ${job.badge}
+              <i class="fa-solid fa-star me-1"></i> ${badgeDisplay}
             </span>
             <div class="job-city-tag position-absolute bottom-0 start-0 m-3 text-white fw-bold d-flex align-items-center gap-2">
               <i class="fa-solid fa-location-dot text-danger"></i>
@@ -269,12 +297,12 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
           
           <div class="card-body p-4 d-flex flex-column">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="badge bg-light text-primary border px-3 py-1 rounded-pill fw-semibold">
-                ${job.categoryName}
+            <div class="job-badges-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+              <span class="badge bg-light text-primary border px-3 py-1 rounded-pill fw-semibold job-category-badge">
+                ${categoryNameDisplay}
               </span>
-              <span class="badge bg-soft-success text-success border-success-subtle px-2 py-1 rounded-2 small">
-                ${job.type}
+              <span class="badge bg-soft-success text-success border-success-subtle px-2 py-1 rounded-2 small job-type-badge">
+                ${typeDisplay}
               </span>
             </div>
 
@@ -283,25 +311,25 @@ document.addEventListener('DOMContentLoaded', function () {
             </h5>
 
             <p class="card-text text-muted small line-clamp-2 mb-3">
-              ${job.description}
+              ${job.description || ''}
             </p>
 
             <div class="job-meta-grid my-3 p-3 bg-light rounded-3">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small"><i class="fa-solid fa-sack-dollar text-warning me-2"></i> الراتب الشهري:</span>
-                <span class="fw-bold text-success font-monospace dir-ltr">${job.salary}</span>
+                <span class="fw-bold text-success font-monospace dir-ltr">${salaryDisplay}</span>
               </div>
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small"><i class="fa-solid fa-house-chimney text-info me-2"></i> السكن:</span>
-                <span class="fw-semibold text-dark small">${job.housing.split(' ')[0]} ${job.housing.split(' ')[1] || ''}</span>
+                <span class="fw-semibold text-dark small">${housingDisplay}</span>
               </div>
               <div class="d-flex align-items-center justify-content-between">
                 <span class="text-muted small"><i class="fa-solid fa-clock text-secondary me-2"></i> ساعات العمل:</span>
-                <span class="fw-semibold text-dark small">${job.hours.split('-')[0]}</span>
+                <span class="fw-semibold text-dark small">${hoursDisplay}</span>
               </div>
             </div>
 
-            <div class="mt-auto pt-2 d-flex gap-2">
+            <div class="mt-auto pt-2 d-flex gap-2 job-card-actions">
               <button class="btn btn-outline-primary w-50 py-2 rounded-pill fw-bold" onclick="viewJobDetails('${job.id}')">
                 <i class="fa-solid fa-circle-info me-1"></i> التفاصيل
               </button>
@@ -312,7 +340,48 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+  }
+
+  function renderJobsList() {
+    if (!jobsContainer) return;
+
+    if (window.SiteConfig && window.SiteConfig.routes && window.SiteConfig.routes.jobsFilter) {
+      const params = new URLSearchParams();
+      if (currentCategory && currentCategory !== 'all') {
+        params.append('category_id', currentCategory);
+      }
+      if (currentSearch && currentSearch.trim()) {
+        params.append('search', currentSearch.trim());
+      }
+
+      fetch(`${window.SiteConfig.routes.jobsFilter}?${params.toString()}`, {
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status && Array.isArray(res.data)) {
+          activeJobsData = res.data;
+          drawJobsHtml(res.data);
+        } else {
+          fallbackRender();
+        }
+      })
+      .catch(() => {
+        fallbackRender();
+      });
+    } else {
+      fallbackRender();
+    }
+  }
+
+  function fallbackRender() {
+    if (typeof IT_JOBS !== 'undefined') {
+      const filtered = filterJobs(currentCategory, currentSearch);
+      activeJobsData = filtered;
+      drawJobsHtml(filtered);
+    }
   }
 
   // Filter Buttons Listener
@@ -325,11 +394,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Search Input Listener
+  // Search Input Listener with Debounce
   if (jobLiveSearch) {
     jobLiveSearch.addEventListener('input', function () {
       currentSearch = this.value;
-      renderJobsList();
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        renderJobsList();
+      }, 350);
     });
   }
 
@@ -338,12 +410,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 5. Job Details Modal Handler
   window.viewJobDetails = function (jobId) {
-    const job = IT_JOBS.find(j => j.id === jobId);
+    let job = activeJobsData.find(j => String(j.id) === String(jobId));
+    if (!job && typeof IT_JOBS !== 'undefined') {
+      job = IT_JOBS.find(j => String(j.id) === String(jobId));
+    }
     if (!job) return;
 
     const modalBody = document.getElementById('jobDetailsModalBody');
     const modalTitle = document.getElementById('jobDetailsModalLabel');
     if (!modalBody || !modalTitle) return;
+
+    const salaryDisplay = job.salary_text || job.salary || 'راتب مجزي';
+    const housingDisplay = job.housing || 'سكن مؤثث متوفر';
+    const insuranceDisplay = job.insurance || 'تأمين طبي شامل';
+    const mealsDisplay = job.meals || 'وجبات أثناء العمل';
+    const experienceDisplay = job.experience || 'خبرة أو بدون خبرة';
+    const typeDisplay = job.type || job.contract_type || 'عقد دائم';
+    const hoursDisplay = job.hours || job.working_hours || '8 ساعات يومياً';
+    const reqs = Array.isArray(job.requirements) ? job.requirements : [];
 
     modalTitle.innerHTML = `<i class="fa-solid fa-briefcase text-primary me-2"></i> ${job.title}`;
     modalBody.innerHTML = `
@@ -351,48 +435,49 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="col-md-5">
           <img src="${job.image}" class="img-fluid rounded-4 shadow-sm w-100" alt="${job.title}">
           <div class="mt-3 p-3 bg-light rounded-3 border">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">المدينة والمنطقة:</span>
-              <strong class="text-dark">${job.city}</strong>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">
+              <span class="text-muted small">المدينة والمنطقة:</span>
+              <strong class="text-dark small">${job.city}</strong>
             </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">الراتب الصافي:</span>
-              <strong class="text-success dir-ltr">${job.salary}</strong>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">
+              <span class="text-muted small">الراتب الصافي:</span>
+              <strong class="text-success small dir-ltr">${salaryDisplay}</strong>
             </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">طبيعة العقد:</span>
-              <strong class="text-dark">${job.type}</strong>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">
+              <span class="text-muted small">طبيعة العقد:</span>
+              <strong class="text-dark small text-end">${typeDisplay}</strong>
             </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-muted">ساعات الدوام:</span>
-              <strong class="text-dark">${job.hours}</strong>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-1">
+              <span class="text-muted small">ساعات الدوام:</span>
+              <strong class="text-dark small">${hoursDisplay}</strong>
             </div>
           </div>
         </div>
         <div class="col-md-7">
           <h5 class="fw-bold text-dark mb-2">وصف فرصة العمل والمهام:</h5>
-          <p class="text-secondary leading-relaxed mb-4">${job.description}</p>
+          <p class="text-secondary leading-relaxed mb-4">${job.description || ''}</p>
 
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-shield-halved text-success me-2"></i> المزايا والحقوق المكفولة:</h6>
           <ul class="list-unstyled mb-4">
-            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>السكن:</strong> ${job.housing}</li>
-            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>التأمين:</strong> ${job.insurance}</li>
-            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>الوجبات:</strong> ${job.meals}</li>
-            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>الخبرة المطلوبة:</strong> ${job.experience}</li>
+            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>السكن:</strong> ${housingDisplay}</li>
+            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>التأمين:</strong> ${insuranceDisplay}</li>
+            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>الوجبات:</strong> ${mealsDisplay}</li>
+            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>الخبرة المطلوبة:</strong> ${experienceDisplay}</li>
           </ul>
 
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-circle-check text-primary me-2"></i> الأوراق والشروط المطلوبة:</h6>
           <ul class="list-unstyled mb-4">
-            ${job.requirements.map(req => `<li class="mb-1"><i class="fa-solid fa-angle-left text-muted me-2"></i> ${req}</li>`).join('')}
+            ${reqs.map(req => `<li class="mb-1"><i class="fa-solid fa-angle-left text-muted me-2"></i> ${req}</li>`).join('')}
           </ul>
 
           <div class="d-flex gap-2">
             <button class="btn btn-primary px-4 py-2 rounded-pill fw-bold flex-grow-1" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#quickApplyModal" onclick="prepareApplyModal('${job.title}', '${job.id}')">
               <i class="fa-solid fa-paper-plane me-1"></i> التقديم الفوري على هذه الوظيفة
             </button>
-            <a href="https://wa.me/201018899770?text=${encodeURIComponent('السلام عليكم، استفسر بخصوص وظيفة: ' + job.title + ' في ' + job.city)}" target="_blank" rel="noopener noreferrer" class="btn btn-success px-3 py-2 rounded-pill fw-bold" aria-label="استفسار عبر واتساب">
+            ${window.SiteConfig?.whatsapp ? `
+            <a href="https://wa.me/${window.SiteConfig.whatsapp}?text=${encodeURIComponent('السلام عليكم، استفسر بخصوص وظيفة: ' + job.title + ' في ' + job.city)}" target="_blank" rel="noopener noreferrer" class="btn btn-success px-3 py-2 rounded-pill fw-bold" aria-label="استفسار عبر واتساب">
               <i class="fa-brands fa-whatsapp fs-5"></i>
-            </a>
+            </a>` : ''}
           </div>
         </div>
       </div>
@@ -405,8 +490,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // 6. Prepare Quick Apply Modal
   window.prepareApplyModal = function (jobTitle, jobId = '') {
     const inputJob = document.getElementById('applyJobTitleInput');
+    const inputJobId = document.getElementById('applyJobIdInput');
     const displayJob = document.getElementById('applyJobTitleDisplay');
     if (inputJob) inputJob.value = jobTitle || 'طلب توظيف عام';
+    if (inputJobId) inputJobId.value = jobId || '';
     if (displayJob) displayJob.textContent = jobTitle || 'طلب توظيف عام في إيطاليا';
   };
 
@@ -416,31 +503,120 @@ document.addEventListener('DOMContentLoaded', function () {
     quickApplyForm.addEventListener('submit', function (e) {
       e.preventDefault();
       const name = document.getElementById('applyName').value.trim();
-      const phone = document.getElementById('applyPhone').value.trim();
-      const job = document.getElementById('applyJobTitleInput').value.trim();
-      const city = document.getElementById('applyGov').value;
-      const notes = document.getElementById('applyNotes').value.trim();
+      let rawPhone = document.getElementById('applyPhone').value.trim();
+      let digits = rawPhone.replace(/[^0-9]/g, '');
+      if (digits.startsWith('20')) {
+        digits = digits.substring(2);
+      }
+      if (digits.startsWith('0')) {
+        digits = digits.substring(1);
+      }
+      const phone = digits ? '+20' + digits : '';
+      const job = document.getElementById('applyJobTitleInput') ? document.getElementById('applyJobTitleInput').value.trim() : '';
+      const jobId = document.getElementById('applyJobIdInput') ? document.getElementById('applyJobIdInput').value.trim() : '';
+      const age = document.getElementById('applyAge') ? document.getElementById('applyAge').value.trim() : '';
+      const city = document.getElementById('applyGov') ? document.getElementById('applyGov').value : '';
+      const notes = document.getElementById('applyNotes') ? document.getElementById('applyNotes').value.trim() : '';
 
       if (!name || !phone) {
-        showNotification('تنبيه', 'يرجى كتابة الاسم ورقم الهاتف/الواتساب للمتابعة', 'warning');
+        if (typeof my_toaster === 'function') {
+          my_toaster('يرجى كتابة الاسم ورقم الهاتف/الواتساب للمتابعة', 'warning');
+        } else {
+          showNotification('تنبيه', 'يرجى كتابة الاسم ورقم الهاتف/الواتساب للمتابعة', 'warning');
+        }
         return;
       }
 
-      // Close modal
-      const modalEl = document.getElementById('quickApplyModal');
-      const modalInstance = bootstrap.Modal.getInstance(modalEl);
-      if (modalInstance) modalInstance.hide();
+      const submitBtn = quickApplyForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
 
-      // Show success feedback
-      const applyMsg = `تم استلام طلبك بنجاح يا ${name}!\nكود الطلب المبدئي هو: HS-${Math.floor(100000 + Math.random() * 900000)}\nسيتواصل معك مستشار التوظيف الإيطالي خلال 24 ساعة عبر الهاتف والواتساب لتحديد موعد المقابلة.`;
-      
-      showNotification('تم إرسال طلبك بنجاح!', applyMsg, 'success', true, function() {
-        // Optional redirect or trigger WhatsApp
-        const waText = encodeURIComponent(`السلام عليكم، قمت بتقديم طلب توظيف لدى شركة هلا النيل:\n- الاسم: ${name}\n- الهاتف: ${phone}\n- الوظيفة المطلوبة: ${job}\n- المحافظة: ${city}\n- ملاحظات: ${notes}`);
-        window.open(`https://wa.me/201018899770?text=${waText}`, '_blank');
+      const token = window.SiteConfig?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const payload = {
+        name: name,
+        phone: phone,
+        age: age ? parseInt(age) : null,
+        job_title: job || 'طلب توظيف عام',
+        job_id: jobId && !isNaN(parseInt(jobId)) ? parseInt(jobId) : null,
+        city_id: city && !isNaN(parseInt(city)) ? parseInt(city) : null,
+        notes: notes,
+        _token: token
+      };
+
+      fetch(window.SiteConfig?.routes?.apply || '/site/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': token
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async (response) => {
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (err) {
+          data = { message: response.statusText || 'حدث خطأ أثناء إرسال الطلب' };
+        }
+
+        if (!response.ok) {
+          let errorList = [];
+          if (Array.isArray(data.errors) && data.errors.length > 0) {
+            errorList = data.errors;
+          } else if (typeof data.errors === 'object' && data.errors !== null) {
+            Object.values(data.errors).forEach(function (fieldErrors) {
+              if (Array.isArray(fieldErrors)) {
+                errorList.push(...fieldErrors);
+              } else if (typeof fieldErrors === 'string') {
+                errorList.push(fieldErrors);
+              }
+            });
+          } else if (data.message) {
+            errorList = [data.message];
+          } else {
+            errorList = ['حدث خطأ أثناء معالجة طلبك، يرجى المحاولة لاحقاً.'];
+          }
+
+          const validationError = new Error(errorList[0]);
+          validationError.errors = errorList;
+          throw validationError;
+        }
+        return data;
+      })
+      .then((data) => {
+        const modalEl = document.getElementById('quickApplyModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
+        if (typeof my_toaster === 'function') {
+          my_toaster(data.message || 'تم استلام طلبك بنجاح!', 'success');
+        }
+
+        showNotification('تم استلام طلبك بنجاح!', data.message || 'تم حفظ طلبك وسيتم مراجعته والتواصل معك.', 'success', true, function() {
+          if (window.SiteConfig?.whatsapp) {
+            const waText = encodeURIComponent(`السلام عليكم، قمت بتقديم طلب توظيف لدى شركة هلا النيل:\n- الاسم: ${name}\n- الهاتف: ${phone}\n- الوظيفة: ${job}`);
+            window.open(`https://wa.me/${window.SiteConfig.whatsapp}?text=${waText}`, '_blank');
+          }
+        });
+
+        quickApplyForm.reset();
+      })
+      .catch((error) => {
+        if (typeof my_toaster === 'function') {
+          if (Array.isArray(error.errors) && error.errors.length > 0) {
+            error.errors.forEach(function (msg) {
+              my_toaster(msg, 'error');
+            });
+          } else {
+            my_toaster(error.message || 'حدث خطأ أثناء حفظ طلبك، يرجى المحاولة مرة أخرى.', 'error');
+          }
+        } else {
+          showNotification('تعذر إرسال الطلب', error.message || 'حدث خطأ أثناء حفظ طلبك، يرجى المحاولة مرة أخرى.', 'error');
+        }
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
       });
-
-      quickApplyForm.reset();
     });
   }
 
@@ -451,22 +627,102 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       const name = document.getElementById('contactName').value.trim();
       const phone = document.getElementById('contactPhone').value.trim();
-      const subject = document.getElementById('contactSubject').value;
+      const subject = document.getElementById('contactSubject') ? document.getElementById('contactSubject').value : '';
+      const city = document.getElementById('contactGov') ? document.getElementById('contactGov').value : '';
       const message = document.getElementById('contactMessage').value.trim();
 
       if (!name || !phone || !message) {
-        showNotification('نقص بيانات', 'يرجى ملء جميع الحقول المطلوبة للتواصل معك بدقة.', 'warning');
+        if (typeof my_toaster === 'function') {
+          my_toaster('يرجى ملء جميع الحقول المطلوبة (الاسم، الهاتف، والرسالة) بدقة.', 'warning');
+        } else {
+          showNotification('نقص بيانات', 'يرجى ملء جميع الحقول المطلوبة للتواصل معك بدقة.', 'warning');
+        }
         return;
       }
 
-      const msgSuccess = `شكراً لتواصلك معنا يا ${name}. تم تسجيل رسالتك بنجاح وسيتواصل معك مستشار هلا النيل عبر الهاتف أو الواتساب فوراً.`;
-      
-      showNotification('شكراً لتواصلك مع هلا النيل!', msgSuccess, 'success', true, function() {
-        const waMsg = encodeURIComponent(`مرحباً شركة هلا النيل، لدي استفسار:\n- الاسم: ${name}\n- الهاتف: ${phone}\n- الموضوع: ${subject}\n- الرسالة: ${message}`);
-        window.open(`https://wa.me/201018899770?text=${waMsg}`, '_blank');
-      });
+      const submitBtn = mainContactForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
 
-      mainContactForm.reset();
+      const token = window.SiteConfig?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const payload = {
+        name: name,
+        phone: phone,
+        subject: subject,
+        city_id: city && !isNaN(parseInt(city)) ? parseInt(city) : null,
+        message: message,
+        _token: token
+      };
+
+      fetch(window.SiteConfig?.routes?.contact || '/site/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': token
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async (response) => {
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (err) {
+          data = { message: response.statusText || 'حدث خطأ أثناء إرسال الرسالة' };
+        }
+
+        if (!response.ok) {
+          let errorList = [];
+          if (Array.isArray(data.errors) && data.errors.length > 0) {
+            errorList = data.errors;
+          } else if (typeof data.errors === 'object' && data.errors !== null) {
+            Object.values(data.errors).forEach(function (fieldErrors) {
+              if (Array.isArray(fieldErrors)) {
+                errorList.push(...fieldErrors);
+              } else if (typeof fieldErrors === 'string') {
+                errorList.push(fieldErrors);
+              }
+            });
+          } else if (data.message) {
+            errorList = [data.message];
+          } else {
+            errorList = ['حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة لاحقاً.'];
+          }
+
+          const validationError = new Error(errorList[0]);
+          validationError.errors = errorList;
+          throw validationError;
+        }
+        return data;
+      })
+      .then((data) => {
+        if (typeof my_toaster === 'function') {
+          my_toaster(data.message || 'تم إرسال رسالتك بنجاح!', 'success');
+        }
+
+        showNotification('شكراً لتواصلك معنا!', data.message || 'تم إرسال رسالتك بنجاح وسيتواصل معك مستشارنا قريباً.', 'success', true, function() {
+          if (window.SiteConfig?.whatsapp) {
+            const waMsg = encodeURIComponent(`مرحباً شركة هلا النيل، لدي استفسار:\n- الاسم: ${name}\n- الهاتف: ${phone}\n- الرسالة: ${message}`);
+            window.open(`https://wa.me/${window.SiteConfig.whatsapp}?text=${waMsg}`, '_blank');
+          }
+        });
+        mainContactForm.reset();
+      })
+      .catch((error) => {
+        if (typeof my_toaster === 'function') {
+          if (Array.isArray(error.errors) && error.errors.length > 0) {
+            error.errors.forEach(function (msg) {
+              my_toaster(msg, 'error');
+            });
+          } else {
+            my_toaster(error.message || 'يرجى مراجعة البيانات المدخلة والمحاولة مرة أخرى.', 'error');
+          }
+        } else {
+          showNotification('تعذر إرسال الرسالة', error.message || 'يرجى مراجعة البيانات المدخلة والمحاولة مرة أخرى.', 'error');
+        }
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
     });
   }
 
@@ -475,31 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const trackInput = document.getElementById('trackPassportInput');
   const trackResultContainer = document.getElementById('trackResultContainer');
 
-  // Simulated Database for realistic query
-  const sampleContracts = {
-    'A12345678': {
-      code: 'HS-78921',
-      name: 'أحمد محمود السيد خليل',
-      job: 'مساعد شيف - ميلانو',
-      status: 'تم إصدار الموافقة الأمنية (Nulla Osta) بنجاح',
-      step: 3,
-      date: '2026-10-18',
-      embassyAppointment: '15 نوفمبر 2026 - السفارة الإيطالية بجاردن سيتي',
-      notes: 'يرجى إحضار أصل المؤهل والفيش الجنائي المصدق من الخارجية في موعد السفارة المحدد.'
-    },
-    'HS-99881': {
-      code: 'HS-99881',
-      name: 'محمود عبد الرحمن إبراهيم',
-      job: 'فني تشييد وبناء - روما',
-      status: 'تم استلام التأشيرة الإيطالية وتحديد موعد السفر',
-      step: 4,
-      date: '2026-10-25',
-      flightDetails: 'رحلة مصر للطيران MS703 إلى مطار روما فيوميتشينو - 4 نوفمبر 2026',
-      notes: 'مندوب شركة هلا النيل سيكون باستقبالك في صالة الوصول بمطار روما مع عقد العمل وبطاقة السكن.'
-    }
-  };
-
-  if (trackBtn && trackInput) {
+  if (trackBtn && trackInput && trackResultContainer) {
     trackBtn.addEventListener('click', function () {
       const query = trackInput.value.trim().toUpperCase();
       if (!query) {
@@ -510,23 +742,30 @@ document.addEventListener('DOMContentLoaded', function () {
       trackResultContainer.classList.remove('d-none');
       trackResultContainer.innerHTML = `
         <div class="text-center py-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 text-muted fw-semibold">جاري الاستعلام في البوابة الموحدة لعقود إيطاليا...</p>
+          <img src="${window.location.origin}/Site/assets/images/loader.webp" alt="جاري الاستعلام..." class="img-fluid mb-3" style="width: 240px; max-width: 90%; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.35);">
+          <p class="text-white-50 fw-semibold mb-0">جاري الاستعلام في البوابة الموحدة لعقود وتأشيرات إيطاليا...</p>
         </div>
       `;
 
-      setTimeout(() => {
-        const found = sampleContracts[query] || {
-          code: 'HS-' + Math.floor(10000 + Math.random() * 90000),
-          name: 'صاحب المعاملة (الطلب قيد التدقيق)',
-          job: 'عقد عمل بإيطاليا (ديكريتو فلوتسي)',
-          status: 'الطلب قيد المراجعة والتدقيق بوزارة الداخلية الإيطالية (Prefettura)',
-          step: 2,
-          date: 'أكتوبر 2026',
-          embassyAppointment: 'سيتم الإخطار فور صدور النولا أوستا (Nulla Osta)',
-          notes: 'أوراقك مكتملة بنجاح وملفك مسجل رسمياً عبر البوابة الإيطالية بدون أي ملاحظات معلقة.'
-        };
+      const token = window.SiteConfig?.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+      fetch(window.SiteConfig?.routes?.track || '/site/tracker/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': token
+        },
+        body: JSON.stringify({ identifier: query, _token: token })
+      })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'لم يتم العثور على المعاملة');
+        }
+        return data.data;
+      })
+      .then((found) => {
         const steps = [
           { title: 'تقديم الأوراق والفحص', icon: 'fa-id-card' },
           { title: 'تسجيل نظام فلوتسي', icon: 'fa-file-shield' },
@@ -542,12 +781,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill mb-2">
                   <i class="fa-solid fa-circle-check me-1"></i> طلب مسجل ومعتمد
                 </span>
-                <h5 class="fw-bold text-dark mb-0">${found.name}</h5>
-                <small class="text-muted">الوظيفة: ${found.job} | كود المعاملة: <span class="font-monospace text-primary fw-bold">${found.code}</span></small>
+                <h5 class="fw-bold text-dark mb-0">${found.applicant_name}</h5>
+                <small class="text-muted">الوظيفة: ${found.job_title} | كود المعاملة: <span class="font-monospace text-primary fw-bold">${found.contract_code}</span> | جواز: <span class="font-monospace fw-bold">${found.passport_number}</span></small>
               </div>
               <div class="text-md-end mt-2 mt-md-0">
-                <span class="d-block text-muted small">آخر تحديث:</span>
-                <span class="fw-bold text-dark">${found.date}</span>
+                <span class="d-block text-muted small">تاريخ التحديث:</span>
+                <span class="fw-bold text-dark">${found.issue_date || '-'}</span>
               </div>
             </div>
 
@@ -556,8 +795,8 @@ document.addEventListener('DOMContentLoaded', function () {
               <div class="row text-center g-2">
                 ${steps.map((st, idx) => {
                   const stepNum = idx + 1;
-                  const isDone = stepNum <= found.step;
-                  const isCurrent = stepNum === found.step;
+                  const isDone = stepNum <= found.current_step;
+                  const isCurrent = stepNum === found.current_step;
                   return `
                     <div class="col">
                       <div class="tracker-step ${isDone ? 'completed' : ''} ${isCurrent ? 'current' : ''}">
@@ -576,17 +815,32 @@ document.addEventListener('DOMContentLoaded', function () {
               <i class="fa-solid fa-circle-info fs-3 text-primary"></i>
               <div>
                 <strong class="d-block text-dark">الحالة الحالية:</strong>
-                <span class="text-secondary">${found.status}</span>
+                <span class="text-secondary">${found.status_text}</span>
               </div>
             </div>
 
             <div class="p-3 bg-light rounded-3 small">
-              <strong>ملاحظات مستشار هلا النيل:</strong>
-              <p class="text-muted mb-0 mt-1">${found.notes} ${found.embassyAppointment ? `<br><strong>الموعد:</strong> ${found.embassyAppointment}` : ''}</p>
+              <strong>ملاحظات ومواعيد السفر:</strong>
+              <p class="text-muted mb-0 mt-1">${found.notes || 'أوراقك مكتملة بنجاح وملفك مسجل رسمياً عبر البوابة الإيطالية.'} ${found.embassy_appointment ? `<br><strong>موعد السفارة:</strong> ${found.embassy_appointment}` : ''} ${found.flight_details ? `<br><strong>تفاصيل الرحلة:</strong> ${found.flight_details}` : ''}</p>
             </div>
           </div>
         `;
-      }, 700);
+      })
+      .catch((error) => {
+        trackResultContainer.innerHTML = `
+          <div class="card border-0 shadow rounded-4 p-4 mt-3 bg-white text-center">
+            <i class="fa-solid fa-circle-exclamation text-warning fs-1 mb-3"></i>
+            <h5 class="fw-bold text-dark">${error.message || 'تعذر العثور على المعاملة'}</h5>
+            <p class="text-muted small mb-3">يرجى التأكد من كتابة رقم جواز السفر أو كود الطلب بشكل صحيح، أو التواصل المباشر مع إدارة هلا النيل.</p>
+            <div>
+              ${window.SiteConfig?.whatsapp ? `
+              <a href="https://wa.me/${window.SiteConfig.whatsapp}?text=${encodeURIComponent('السلام عليكم، استفسر عن تتبع معاميلتي برقم: ' + query)}" target="_blank" rel="noopener noreferrer" class="btn btn-success px-4 py-2 rounded-pill">
+                <i class="fa-brands fa-whatsapp me-1"></i> تواصل مع المستشار عبر واتساب
+              </a>` : ''}
+            </div>
+          </div>
+        `;
+      });
     });
   }
 
@@ -637,10 +891,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 11. Helper Notification Function
   function showNotification(title, text, icon = 'success', hasWhatsApp = false, waCallback = null) {
+    if (!hasWhatsApp && typeof my_toaster === 'function') {
+      const toastType = (icon === 'error') ? 'error' : ((icon === 'warning') ? 'warning' : ((icon === 'info') ? 'info' : 'success'));
+      my_toaster(text, toastType);
+      return;
+    }
+
     if (typeof Swal !== 'undefined') {
       Swal.fire({
         title: title,
-        html: `<div style="text-align: right; font-family: 'Cairo', sans-serif;">${text.replace(/\n/g, '<br>')}</div>`,
+        html: `<div style="text-align: right; font-family: 'Cairo', sans-serif;">${(text || '').replace(/\n/g, '<br>')}</div>`,
         icon: icon,
         confirmButtonText: hasWhatsApp ? 'متابعة عبر واتساب <i class="fa-brands fa-whatsapp ms-1"></i>' : 'تم، حسناً',
         confirmButtonColor: '#008c45',
@@ -656,7 +916,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
     } else {
-      alert(`${title}\n\n${text}`);
+      if (typeof my_toaster === 'function') {
+        my_toaster(text, icon === 'error' ? 'error' : 'success');
+      } else {
+        alert(`${title}\n\n${text}`);
+      }
       if (hasWhatsApp && waCallback && confirm('هل تود التحدث عبر واتساب الآن لمتابعة الطلب؟')) {
         waCallback();
       }
