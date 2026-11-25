@@ -6,51 +6,84 @@
 
 @section('content')
 <div class="row">
-    <!-- Filter Card -->
+    <!-- Filter Card (Responsive & Collapsible) -->
     <div class="col-12 mb-3">
-        <div class="card">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ route('accounting.reports.index') }}" class="row align-items-end">
-                    <div class="col-md-3 col-sm-6 mb-2">
-                        <label class="form-label font-weight-bold fs-12">الفترة الزمنية السريعة:</label>
-                        <select name="period" class="form-control form-control-sm" id="reportPeriodSelect">
-                            <option value="today" {{ request('period') === 'today' ? 'selected' : '' }}>اليوم</option>
-                            <option value="week" {{ request('period') === 'week' ? 'selected' : '' }}>الأسبوع الحالي</option>
-                            <option value="month" {{ request('period', 'month') === 'month' ? 'selected' : '' }}>الشهر الحالي</option>
-                            <option value="year" {{ request('period') === 'year' ? 'selected' : '' }}>السنة الحالية</option>
-                            <option value="custom" {{ request('period') === 'custom' ? 'selected' : '' }}>فترة مخصصة (من - إلى)</option>
-                        </select>
+        <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #ffffff;">
+            <div class="card-header bg-white py-2 px-4 d-flex justify-content-between align-items-center" style="border-radius: 12px; cursor: pointer;" data-toggle="collapse" data-target="#reportFilterCollapse" aria-expanded="true" aria-controls="reportFilterCollapse">
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <span class="badge badge-light border text-primary p-2" style="border-radius: 8px;">
+                        <i class="fe fe-sliders fs-14"></i>
+                    </span>
+                    <span class="font-weight-bold text-dark fs-14">تصفية وفلترة التقارير المالية</span>
+                    <span class="badge badge-primary px-2 py-1 fs-11">
+                        {{ $summary['start_date'] ? ($summary['start_date'].' → '.($summary['end_date'] ?? 'الآن')) : 'كل الفترات' }}
+                    </span>
+                </div>
+                <button class="btn btn-sm btn-outline-primary font-weight-bold" type="button">
+                    <i class="fe fe-filter ml-1"></i> خيارات الفلترة <i class="fa fa-chevron-down mr-1"></i>
+                </button>
+            </div>
+
+            <div class="card-body p-3 p-md-4 collapse show border-top" id="reportFilterCollapse">
+                <form method="GET" action="{{ route('accounting.reports.index') }}" id="reportFilterForm">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <label class="form-label font-weight-bold fs-12 text-muted mb-1">
+                                <i class="fe fe-clock text-primary ml-1"></i> الفترة الزمنية السريعة:
+                            </label>
+                            <select name="period" class="form-control form-control-solid" id="reportPeriodSelect">
+                                <option value="today" {{ request('period') === 'today' ? 'selected' : '' }}>اليوم</option>
+                                <option value="week" {{ request('period') === 'week' ? 'selected' : '' }}>الأسبوع الحالي</option>
+                                <option value="month" {{ request('period', 'month') === 'month' ? 'selected' : '' }}>الشهر الحالي</option>
+                                <option value="year" {{ request('period') === 'year' ? 'selected' : '' }}>السنة الحالية</option>
+                                <option value="all" {{ request('period') === 'all' ? 'selected' : '' }}>كل الفترات (منذ البداية)</option>
+                                <option value="custom" {{ request('period') === 'custom' ? 'selected' : '' }}>فترة مخصصة (من - إلى)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <label class="form-label font-weight-bold fs-12 text-muted mb-1">
+                                <i class="fe fe-calendar text-primary ml-1"></i> من تاريخ:
+                            </label>
+                            <input type="date" name="date_from" id="reportDateFrom" value="{{ request('period') === 'custom' ? request('date_from') : $summary['start_date'] }}" class="form-control form-control-solid">
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <label class="form-label font-weight-bold fs-12 text-muted mb-1">
+                                <i class="fe fe-calendar text-primary ml-1"></i> إلى تاريخ:
+                            </label>
+                            <input type="date" name="date_to" id="reportDateTo" value="{{ request('period') === 'custom' ? request('date_to') : $summary['end_date'] }}" class="form-control form-control-solid">
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <label class="form-label font-weight-bold fs-12 text-muted mb-1">
+                                <i class="fe fe-bar-chart-2 text-success ml-1"></i> آلية احتساب الأرباح:
+                            </label>
+                            <select name="calculation_mode" id="reportCalculationMode" class="form-control form-control-solid">
+                                <option value="collected_actual" {{ request('calculation_mode', 'collected_actual') === 'collected_actual' ? 'selected' : '' }}>
+                                    المحصل الفعلي في الخزائن
+                                </option>
+                                <option value="total_contract_value" {{ request('calculation_mode') === 'total_contract_value' ? 'selected' : '' }}>
+                                    إجمالي قيمة العقود المسجلة
+                                </option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="col-md-2 col-sm-6 mb-2">
-                        <label class="form-label font-weight-bold fs-12">من تاريخ:</label>
-                        <input type="date" name="date_from" value="{{ request('date_from', $summary['start_date']) }}" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-md-2 col-sm-6 mb-2">
-                        <label class="form-label font-weight-bold fs-12">إلى تاريخ:</label>
-                        <input type="date" name="date_to" value="{{ request('date_to', $summary['end_date']) }}" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-md-3 col-sm-12 mb-2">
-                        <label class="form-label font-weight-bold fs-12">آلية احتساب الأرباح:</label>
-                        <select name="calculation_mode" class="form-control form-control-sm">
-                            <option value="collected_actual" {{ request('calculation_mode', 'collected_actual') === 'collected_actual' ? 'selected' : '' }}>
-                                المحصل الفعلي في الخزائن
-                            </option>
-                            <option value="total_contract_value" {{ request('calculation_mode') === 'total_contract_value' ? 'selected' : '' }}>
-                                إجمالي قيمة العقود المسجلة
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2 col-sm-12 mb-2 d-flex" style="gap: 5px;">
-                        <button type="submit" class="btn btn-primary btn-sm flex-fill font-weight-bold">
-                            <i class="fe fe-search ml-1"></i> عرض التقرير
-                        </button>
-                        <button type="button" onclick="window.print()" class="btn btn-outline-dark btn-sm font-weight-bold" title="طباعة">
-                            <i class="fe fe-printer"></i>
-                        </button>
+                    <div class="row pt-2 border-top">
+                        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 mr-auto">
+                            <div class="d-flex flex-wrap" style="gap: 8px;">
+                                <button type="submit" class="btn btn-primary font-weight-bold flex-fill py-2">
+                                    <i class="fe fe-search ml-1"></i> عرض التقرير
+                                </button>
+                                <a href="{{ route('accounting.reports.index') }}" class="btn btn-outline-secondary font-weight-bold py-2 px-3" title="إعادة ضبط">
+                                    <i class="fe fe-rotate-ccw ml-1"></i> إعادة ضبط
+                                </a>
+                                <button type="button" onclick="window.print()" class="btn btn-outline-dark font-weight-bold py-2 px-3" title="طباعة">
+                                    <i class="fe fe-printer ml-1"></i> طباعة
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -169,3 +202,26 @@
     </div>
 </div>
 @endsection
+
+@push('admin_js')
+<script>
+    $(document).ready(function() {
+        $('#reportPeriodSelect').on('change', function() {
+            var val = $(this).val();
+            if (val !== 'custom') {
+                $('#reportDateFrom').val('');
+                $('#reportDateTo').val('');
+                $('#reportFilterForm').submit();
+            }
+        });
+
+        $('#reportDateFrom, #reportDateTo').on('change', function() {
+            $('#reportPeriodSelect').val('custom');
+        });
+
+        $('#reportCalculationMode').on('change', function() {
+            $('#reportFilterForm').submit();
+        });
+    });
+</script>
+@endpush
