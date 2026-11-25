@@ -85,8 +85,16 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 'bash -s' << 'ENDSSH'
+          DB_DATABASE_B64=$(printf '%s' "$DB_DATABASE" | base64 -w0)
+          DB_USERNAME_B64=$(printf '%s' "$DB_USERNAME" | base64 -w0)
+          DB_PASSWORD_B64=$(printf '%s' "$DB_PASSWORD" | base64 -w0)
+
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 "bash -s '$DB_DATABASE_B64' '$DB_USERNAME_B64' '$DB_PASSWORD_B64'" << 'ENDSSH'
           set -e
+
+          DB_DATABASE=$(printf '%s' "$1" | base64 -d)
+          DB_USERNAME=$(printf '%s' "$2" | base64 -d)
+          DB_PASSWORD=$(printf '%s' "$3" | base64 -d)
 
           # 1. Write public_html/index.php linked to ~/Project
           cat > /home/u261198647/public_html/index.php << 'EOF'
@@ -113,20 +121,51 @@ jobs:
           # 2. Link public_html/storage -> ~/Project/storage/app/public
           ln -sfn /home/u261198647/Project/storage/app/public /home/u261198647/public_html/storage
 
-          # 3. Create .env from .env.example if it does not exist yet
+          # 3. Create or fix .env DB credentials
           cd /home/u261198647/Project
           if [ ! -f .env ]; then
             cp .env.example .env
-            sed -i "s|^APP_NAME=.*|APP_NAME=\"Hala ElNile\"|" .env
-            sed -i "s|^APP_ENV=.*|APP_ENV=production|" .env
-            sed -i "s|^APP_DEBUG=.*|APP_DEBUG=false|" .env
-            sed -i "s|^APP_URL=.*|APP_URL=https://halaelnile.com|" .env
-            sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
-            sed -i "s|^# DB_HOST=.*|DB_HOST=127.0.0.1|" .env
-            sed -i "s|^# DB_PORT=.*|DB_PORT=3306|" .env
-            sed -i "s|^# DB_DATABASE=.*|DB_DATABASE='"$DB_DATABASE"'|" .env
-            sed -i "s|^# DB_USERNAME=.*|DB_USERNAME='"$DB_USERNAME"'|" .env
-            sed -i "s|^# DB_PASSWORD=.*|DB_PASSWORD='"$DB_PASSWORD"'|" .env
+          fi
+
+          update_env() {
+            local key="$1"
+            local val="$2"
+            /usr/bin/php -r '
+              $file = ".env";
+              $content = file_get_contents($file);
+              $key = $argv[1];
+              $val = $argv[2];
+              $safeVal = "\"" . addcslashes($val, "\"\\$") . "\"";
+              if (preg_match("/^" . preg_quote($key, "/") . "=/m", $content)) {
+                  $content = preg_replace("/^" . preg_quote($key, "/") . "=.*/m", $key . "=" . $safeVal, $content);
+              } elseif (preg_match("/^#\s*" . preg_quote($key, "/") . "=/m", $content)) {
+                  $content = preg_replace("/^#\s*" . preg_quote($key, "/") . "=.*/m", $key . "=" . $safeVal, $content);
+              } else {
+                  $content .= PHP_EOL . $key . "=" . $safeVal . PHP_EOL;
+              }
+              file_put_contents($file, $content);
+            ' "$key" "$val"
+          }
+
+          update_env "APP_NAME" "Hala ElNile"
+          update_env "APP_ENV" "production"
+          update_env "APP_DEBUG" "false"
+          update_env "APP_URL" "https://halaelnile.com"
+          update_env "DB_CONNECTION" "mysql"
+          update_env "DB_HOST" "127.0.0.1"
+          update_env "DB_PORT" "3306"
+
+          if [ -n "$DB_DATABASE" ]; then
+            update_env "DB_DATABASE" "$DB_DATABASE"
+          fi
+          if [ -n "$DB_USERNAME" ]; then
+            update_env "DB_USERNAME" "$DB_USERNAME"
+          fi
+          if [ -n "$DB_PASSWORD" ]; then
+            update_env "DB_PASSWORD" "$DB_PASSWORD"
+          fi
+
+          if grep -q "^APP_KEY=$" .env; then
             /usr/bin/php artisan key:generate --force
           fi
 
