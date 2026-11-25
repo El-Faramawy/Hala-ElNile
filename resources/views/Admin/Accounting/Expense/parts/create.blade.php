@@ -102,9 +102,9 @@
 
         <!-- Contract Select -->
         <div class="col-md-12 mb-3 d-none" id="contractSelectWrap">
-            <label class="form-label font-weight-bold">اختيار العقد المرتبط</label>
+            <label class="form-label font-weight-bold">اختيار العقد المرتبط <small class="text-muted" id="contractOptionalHint">(اختياري)</small></label>
             <select name="contract_tracker_id" class="form-control select2-basic" id="contractSelect">
-                <option value="">-- اختر العقد --</option>
+                <option value="">-- اختر العقد أو ابحث بالاسم أو الكود --</option>
                 @foreach($contracts as $contract)
                     <option value="{{ $contract->id }}">{{ $contract->applicant_name }} (كود: {{ $contract->contract_code }})</option>
                 @endforeach
@@ -172,8 +172,11 @@
                 $('#adminSelectWrap').removeClass('d-none');
             } else if (val === 'supplier') {
                 $('#supplierSelectWrap').removeClass('d-none');
+                $('#contractSelectWrap').removeClass('d-none');
+                $('#contractOptionalHint').removeClass('d-none');
             } else if (val === 'contract') {
                 $('#contractSelectWrap').removeClass('d-none');
+                $('#contractOptionalHint').addClass('d-none');
             }
         });
 

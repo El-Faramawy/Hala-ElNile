@@ -60,6 +60,23 @@
 <script src="{{url('Admin')}}/assets/plugins/datatable/fileexport/buttons.print.min.js"></script>
 <script src="{{url('Admin')}}/assets/plugins/datatable/fileexport/buttons.colVis.min.js"></script>
 
+<!-- SELECT2 JS -->
+<script src="{{url('Admin')}}/assets/plugins/select2/select2.full.min.js"></script>
+<script>
+    $(document).ready(function () {
+        if ($.fn.select2) {
+            $('select.select2-filter').each(function () {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        width: '100%',
+                        dir: 'rtl'
+                    });
+                }
+            });
+        }
+    });
+</script>
+
 <!-- GLOBAL ADMIN UTILITIES -->
 <script>
     // Global CSRF Token Setup

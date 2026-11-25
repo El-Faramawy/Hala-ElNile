@@ -134,6 +134,8 @@
                 <span class="receipt-val">
                     @if($expense->admin)
                         {{ $expense->admin->name }} (موظف)
+                    @elseif($expense->supplier && $expense->contractTracker)
+                        {{ $expense->supplier->name }} (مورد) — عقد: {{ $expense->contractTracker->applicant_name }} ({{ $expense->contractTracker->contract_code }})
                     @elseif($expense->supplier)
                         {{ $expense->supplier->name }} (مورد)
                     @elseif($expense->contractTracker)

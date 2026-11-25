@@ -65,7 +65,8 @@
                 $select.select2({
                     dropdownParent: $('#Modal'),
                     width: '100%',
-                    dir: 'rtl'
+                    dir: 'rtl',
+                    minimumResultsForSearch: 0
                 });
             });
         }
@@ -105,6 +106,9 @@
 
                     var reposition = function () {
                         if (!config._collection || !config._collection.length) return;
+                        if (!config._collection.parent().is('body')) {
+                            config._collection.appendTo(document.body);
+                        }
                         var $btn = $(button);
                         if (!$btn.length) return;
 
@@ -273,6 +277,9 @@
         function adjustCollectionPosition() {
             var $col = $('div.dt-button-collection:visible');
             if (!$col.length) return;
+            if (!$col.parent().is('body')) {
+                $col.appendTo(document.body);
+            }
 
             var $btn = $('.buttons-collection.active, .buttons-colvis.active, .buttons-collection:focus, .buttons-colvis:focus');
             if (!$btn.length) {

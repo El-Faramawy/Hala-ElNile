@@ -49,16 +49,22 @@ class ExpenseService
                 return '<span class="font-weight-bold text-danger fs-14">'.$amount.' ج.م</span>';
             })
             ->addColumn('beneficiary', function (Expense $expense): string {
+                $badges = [];
+
                 if ($expense->admin) {
-                    return '<div><span class="badge badge-info px-2 py-1"><i class="fa fa-user mr-1"></i>موظف: '.e($expense->admin->name).'</span></div>';
+                    $badges[] = '<span class="badge badge-info px-2 py-1"><i class="fa fa-user mr-1"></i>موظف: '.e($expense->admin->name).'</span>';
                 }
 
                 if ($expense->supplier) {
-                    return '<div><span class="badge badge-secondary px-2 py-1"><i class="fa fa-truck mr-1"></i>مورد: '.e($expense->supplier->name).'</span></div>';
+                    $badges[] = '<span class="badge badge-secondary px-2 py-1"><i class="fa fa-truck mr-1"></i>مورد: '.e($expense->supplier->name).'</span>';
                 }
 
                 if ($expense->contractTracker) {
-                    return '<div><span class="badge badge-light border text-primary px-2 py-1"><i class="fa fa-file-text-o mr-1"></i>عقد: '.e($expense->contractTracker->applicant_name).'</span></div>';
+                    $badges[] = '<span class="badge badge-light border text-primary px-2 py-1"><i class="fa fa-file-text-o mr-1"></i>عقد: '.e($expense->contractTracker->applicant_name).'</span>';
+                }
+
+                if (! empty($badges)) {
+                    return '<div class="d-flex flex-column align-items-start" style="gap: 4px;">'.implode('', $badges).'</div>';
                 }
 
                 if ($expense->other_details) {
