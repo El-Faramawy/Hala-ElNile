@@ -30,13 +30,38 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y sshpass rsync
 
-      - name: Sync Laravel Project files to ~/Project
+      - name: Detect Hostinger web root & prepare directories
         env:
           SSH_PASS: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 \
-            "mkdir -p /home/u261198647/Project /home/u261198647/public_html"
+          BASE_DIR=$(sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 '
+            if [ -d "/home/u261198647/domains/halaelnile.com/public_html" ]; then
+              echo "/home/u261198647/domains/halaelnile.com"
+            else
+              echo "/home/u261198647"
+            fi
+          ' | tr -d '\r\n')
+          echo "BASE_DIR=$BASE_DIR" >> $GITHUB_ENV
+          echo "Detected BASE_DIR: $BASE_DIR"
 
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 "
+            mkdir -p $BASE_DIR/Project/storage/app/public \
+                     $BASE_DIR/Project/storage/app/private \
+                     $BASE_DIR/Project/storage/framework/cache/data \
+                     $BASE_DIR/Project/storage/framework/sessions \
+                     $BASE_DIR/Project/storage/framework/views \
+                     $BASE_DIR/Project/storage/logs \
+                     $BASE_DIR/Project/bootstrap/cache \
+                     $BASE_DIR/public_html
+            if [ \"$BASE_DIR\" != \"/home/u261198647\" ] && [ -d \"/home/u261198647/Project/storage/app/public\" ]; then
+              cp -rn /home/u261198647/Project/storage/app/public/. $BASE_DIR/Project/storage/app/public/ || true
+            fi
+          "
+
+      - name: Sync Laravel Project files to Project folder
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
           sshpass -p "$SSH_PASS" rsync -avz --delete \
             --exclude='.git' \
             --exclude='.github' \
@@ -45,29 +70,20 @@ jobs:
             --exclude='public' \
             --exclude='storage' \
             -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
-            ./ u261198647@185.224.138.10:/home/u261198647/Project/
+            ./ u261198647@185.224.138.10:${{ env.BASE_DIR }}/Project/
 
-      - name: Prepare storage & sync public images (without deleting server uploads)
+      - name: Sync public storage images (if any in repo, without deleting server uploads)
         env:
           SSH_PASS: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 \
-            "mkdir -p /home/u261198647/Project/storage/app/public \
-                      /home/u261198647/Project/storage/app/private \
-                      /home/u261198647/Project/storage/framework/cache/data \
-                      /home/u261198647/Project/storage/framework/sessions \
-                      /home/u261198647/Project/storage/framework/views \
-                      /home/u261198647/Project/storage/logs \
-                      /home/u261198647/Project/bootstrap/cache"
-
           if [ -d "./storage/app/public" ]; then
             sshpass -p "$SSH_PASS" rsync -avz \
               --exclude='.gitignore' \
               -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
-              ./storage/app/public/ u261198647@185.224.138.10:/home/u261198647/Project/storage/app/public/
+              ./storage/app/public/ u261198647@185.224.138.10:${{ env.BASE_DIR }}/Project/storage/app/public/
           fi
 
-      - name: Sync public assets to ~/public_html
+      - name: Sync public assets to public_html
         env:
           SSH_PASS: ${{ secrets.SSH_PASSWORD }}
         run: |
@@ -76,7 +92,7 @@ jobs:
             --exclude='index.php' \
             --exclude='hot' \
             -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
-            ./public/ u261198647@185.224.138.10:/home/u261198647/public_html/
+            ./public/ u261198647@185.224.138.10:${{ env.BASE_DIR }}/public_html/
 
       - name: Configure index.php, storage symlink, .env & Laravel caches on server
         env:
@@ -84,20 +100,22 @@ jobs:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          BASE_DIR: ${{ env.BASE_DIR }}
         run: |
           DB_DATABASE_B64=$(printf '%s' "$DB_DATABASE" | base64 -w0)
           DB_USERNAME_B64=$(printf '%s' "$DB_USERNAME" | base64 -w0)
           DB_PASSWORD_B64=$(printf '%s' "$DB_PASSWORD" | base64 -w0)
 
-          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 "bash -s '$DB_DATABASE_B64' '$DB_USERNAME_B64' '$DB_PASSWORD_B64'" << 'ENDSSH'
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 "bash -s '$BASE_DIR' '$DB_DATABASE_B64' '$DB_USERNAME_B64' '$DB_PASSWORD_B64'" << 'ENDSSH'
           set -e
 
-          DB_DATABASE=$(printf '%s' "$1" | base64 -d)
-          DB_USERNAME=$(printf '%s' "$2" | base64 -d)
-          DB_PASSWORD=$(printf '%s' "$3" | base64 -d)
+          BASE_DIR="$1"
+          DB_DATABASE=$(printf '%s' "$2" | base64 -d)
+          DB_USERNAME=$(printf '%s' "$3" | base64 -d)
+          DB_PASSWORD=$(printf '%s' "$4" | base64 -d)
 
-          # 1. Write public_html/index.php linked to ~/Project
-          cat > /home/u261198647/public_html/index.php << 'EOF'
+          # 1. Write public_html/index.php linked to ../Project
+          cat > "$BASE_DIR/public_html/index.php" << 'EOF'
           <?php
 
           use Illuminate\Foundation\Application;
@@ -118,11 +136,11 @@ jobs:
           $app->handleRequest(Request::capture());
           EOF
 
-          # 2. Link public_html/storage -> ~/Project/storage/app/public
-          ln -sfn /home/u261198647/Project/storage/app/public /home/u261198647/public_html/storage
+          # 2. Link public_html/storage -> Project/storage/app/public
+          ln -sfn "$BASE_DIR/Project/storage/app/public" "$BASE_DIR/public_html/storage"
 
-          # 3. Create or fix .env DB credentials
-          cd /home/u261198647/Project
+          # 3. Create or update .env
+          cd "$BASE_DIR/Project"
           if [ ! -f .env ]; then
             cp .env.example .env
           fi
