@@ -1,4 +1,9 @@
-<?php $setting = App\Models\Setting::first(); ?>
+@php
+    $setting = App\Models\Setting::first();
+    $unreadMessagesCount = App\Models\ContactMessage::where('is_read', false)->count();
+    $unreadApplicationsCount = App\Models\JobApplication::where('status', 'pending')->count();
+    $activeContractsCount = App\Models\ContractTracker::where('is_active', true)->count();
+@endphp
 
 <!--APP-SIDEBAR-->
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
@@ -52,6 +57,9 @@
         <x-sidebar-link href="{{ route('job-applications.index') }}">
             <i class="fe fe-file-text side-menu__icon"></i>
             <span class="side-menu__label">طلبات التوظيف</span>
+            @if($unreadApplicationsCount > 0)
+                <span class="badge badge-warning text-dark rounded-pill mr-auto px-2 py-1" style="font-size: 11px;">{{ $unreadApplicationsCount }}</span>
+            @endif
         </x-sidebar-link>
 
         <li class="side-item side-item-category">
@@ -63,6 +71,9 @@
         <x-sidebar-link href="{{ route('contract-trackers.index') }}">
             <i class="fe fe-check-circle side-menu__icon"></i>
             <span class="side-menu__label">العقود السارية</span>
+            @if($activeContractsCount > 0)
+                <span class="badge badge-success rounded-pill mr-auto px-2 py-1" style="font-size: 11px;">{{ $activeContractsCount }}</span>
+            @endif
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('travelers.index') }}">
@@ -100,6 +111,9 @@
         <x-sidebar-link href="{{ route('contact-messages.index') }}">
             <i class="fe fe-mail side-menu__icon"></i>
             <span class="side-menu__label">رسائل واستفسارات العملاء</span>
+            @if($unreadMessagesCount > 0)
+                <span class="badge badge-danger rounded-pill mr-auto px-2 py-1" style="font-size: 11px;">{{ $unreadMessagesCount }}</span>
+            @endif
         </x-sidebar-link>
 
         <x-sidebar-link href="{{ route('faqs.index') }}">

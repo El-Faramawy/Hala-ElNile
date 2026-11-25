@@ -173,17 +173,19 @@
 
         <!-- Contact Inquiries -->
         <div class="col-sm-6 col-lg-3">
-            <div class="kpi-card p-3">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="small text-muted">رسائل التواصل</div>
-                        <h4 class="fw-bold mb-0 text-dark">{{ $stats['total_messages'] }}</h4>
-                    </div>
-                    <div class="p-2 rounded-circle bg-light text-info">
-                        <i class="fe fe-message-square fs-5"></i>
+            <a href="{{ route('contact-messages.index') }}" class="text-decoration-none d-block">
+                <div class="kpi-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-muted">رسائل التواصل</div>
+                            <h4 class="fw-bold mb-0 text-dark">{{ $stats['total_messages'] }}</h4>
+                        </div>
+                        <div class="p-2 rounded-circle bg-light text-info">
+                            <i class="fe fe-message-square fs-5"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Admins -->
@@ -266,7 +268,9 @@
                     <h6 class="fw-bold text-dark mb-0">
                         <i class="fe fe-mail text-success me-1"></i> أحدث استفسارات العملاء
                     </h6>
-                    <span class="badge bg-soft-info text-info">رسائل الموقع</span>
+                    <a href="{{ route('contact-messages.index') }}" class="badge bg-soft-info text-info text-decoration-none">
+                        رسائل الموقع <i class="fe fe-arrow-left ms-1"></i>
+                    </a>
                 </div>
                 <div class="card-body p-3">
                     @forelse($stats['recent_messages'] as $msg)
