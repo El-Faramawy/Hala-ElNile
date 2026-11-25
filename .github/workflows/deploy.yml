@@ -1,0 +1,140 @@
+name: Deploy HalaElNile to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, gd, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install sshpass and rsync
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y sshpass rsync
+
+      - name: Sync Laravel Project files to ~/Project
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 \
+            "mkdir -p /home/u261198647/Project /home/u261198647/public_html"
+
+          sshpass -p "$SSH_PASS" rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='public' \
+            --exclude='storage' \
+            -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
+            ./ u261198647@185.224.138.10:/home/u261198647/Project/
+
+      - name: Prepare storage & sync public images (without deleting server uploads)
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 \
+            "mkdir -p /home/u261198647/Project/storage/app/public \
+                      /home/u261198647/Project/storage/app/private \
+                      /home/u261198647/Project/storage/framework/cache/data \
+                      /home/u261198647/Project/storage/framework/sessions \
+                      /home/u261198647/Project/storage/framework/views \
+                      /home/u261198647/Project/storage/logs \
+                      /home/u261198647/Project/bootstrap/cache"
+
+          if [ -d "./storage/app/public" ]; then
+            sshpass -p "$SSH_PASS" rsync -avz \
+              --exclude='.gitignore' \
+              -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
+              ./storage/app/public/ u261198647@185.224.138.10:/home/u261198647/Project/storage/app/public/
+          fi
+
+      - name: Sync public assets to ~/public_html
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASS" rsync -avz --delete \
+            --exclude='storage' \
+            --exclude='index.php' \
+            --exclude='hot' \
+            -e "ssh -p 65002 -o StrictHostKeyChecking=no" \
+            ./public/ u261198647@185.224.138.10:/home/u261198647/public_html/
+
+      - name: Configure index.php, storage symlink, .env & Laravel caches on server
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          sshpass -p "$SSH_PASS" ssh -p 65002 -o StrictHostKeyChecking=no u261198647@185.224.138.10 'bash -s' << 'ENDSSH'
+          set -e
+
+          # 1. Write public_html/index.php linked to ~/Project
+          cat > /home/u261198647/public_html/index.php << 'EOF'
+          <?php
+
+          use Illuminate\Foundation\Application;
+          use Illuminate\Http\Request;
+
+          define('LARAVEL_START', microtime(true));
+
+          if (file_exists($maintenance = __DIR__.'/../Project/storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
+
+          require __DIR__.'/../Project/vendor/autoload.php';
+
+          /** @var Application $app */
+          $app = require_once __DIR__.'/../Project/bootstrap/app.php';
+          $app->usePublicPath(__DIR__);
+
+          $app->handleRequest(Request::capture());
+          EOF
+
+          # 2. Link public_html/storage -> ~/Project/storage/app/public
+          ln -sfn /home/u261198647/Project/storage/app/public /home/u261198647/public_html/storage
+
+          # 3. Create .env from .env.example if it does not exist yet
+          cd /home/u261198647/Project
+          if [ ! -f .env ]; then
+            cp .env.example .env
+            sed -i "s|^APP_NAME=.*|APP_NAME=\"Hala ElNile\"|" .env
+            sed -i "s|^APP_ENV=.*|APP_ENV=production|" .env
+            sed -i "s|^APP_DEBUG=.*|APP_DEBUG=false|" .env
+            sed -i "s|^APP_URL=.*|APP_URL=https://halaelnile.com|" .env
+            sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
+            sed -i "s|^# DB_HOST=.*|DB_HOST=127.0.0.1|" .env
+            sed -i "s|^# DB_PORT=.*|DB_PORT=3306|" .env
+            sed -i "s|^# DB_DATABASE=.*|DB_DATABASE='"$DB_DATABASE"'|" .env
+            sed -i "s|^# DB_USERNAME=.*|DB_USERNAME='"$DB_USERNAME"'|" .env
+            sed -i "s|^# DB_PASSWORD=.*|DB_PASSWORD='"$DB_PASSWORD"'|" .env
+            /usr/bin/php artisan key:generate --force
+          fi
+
+          # 4. Permissions & Artisan optimization
+          chmod -R 775 storage bootstrap/cache
+          /usr/bin/php artisan migrate --force
+          /usr/bin/php artisan optimize:clear
+          /usr/bin/php artisan config:cache
+          /usr/bin/php artisan route:cache
+          /usr/bin/php artisan view:cache
+          ENDSSH
