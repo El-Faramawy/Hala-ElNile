@@ -20,6 +20,8 @@ class UpdateContractPriceRequest extends FormRequest
     {
         return [
             'total_price_eur' => ['required', 'numeric', 'min:0'],
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
+            'supplier_cost_eur' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

@@ -204,12 +204,14 @@ class AccountingDashboardService
                 $contractCode = e($contract->contract_code);
                 $applicantName = e($contract->applicant_name);
                 $totalPriceEur = (float) $contract->total_price_eur;
+                $supplierId = $contract->supplier_id ?? '';
+                $supplierCostEur = (float) ($contract->supplier_cost_eur ?? 0);
 
                 return '<div class="btn-group btn-group-sm">
                     <button type="button" class="btn btn-outline-primary show-contract-ledger-btn" data-id="'.$contractId.'" data-code="'.$contractCode.'" data-name="'.$applicantName.'" data-total="'.$totalPriceEur.'" title="كشف الحساب وجدولة الدفعات">
                         <i class="fa fa-list-alt mr-1"></i> كشف الحساب
                     </button>
-                    <button type="button" class="btn btn-outline-warning edit-contract-price-btn" data-id="'.$contractId.'" data-name="'.$applicantName.'" data-total="'.$totalPriceEur.'" title="تعديل سعر العقد باليورو">
+                    <button type="button" class="btn btn-outline-warning edit-contract-price-btn" data-id="'.$contractId.'" data-name="'.$applicantName.'" data-total="'.$totalPriceEur.'" data-supplier-id="'.$supplierId.'" data-supplier-cost="'.$supplierCostEur.'" title="تعديل سعر العقد والمورد">
                         <i class="fa fa-edit"></i> السعر
                     </button>
                     <button type="button" class="btn btn-outline-success quick-add-revenue-btn" data-contract-id="'.$contractId.'" data-name="'.$applicantName.'" title="تسجيل دفعة مسددة">

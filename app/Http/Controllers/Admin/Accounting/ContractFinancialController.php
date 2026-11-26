@@ -12,6 +12,7 @@ use App\Models\ContractTracker;
 use App\Models\Installment;
 use App\Services\Accounting\AccountingDashboardService;
 use App\Services\Accounting\InstallmentService;
+use App\Services\Accounting\SupplierService;
 use App\Services\Accounting\TreasuryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,8 @@ class ContractFinancialController extends Controller
     public function __construct(
         protected AccountingDashboardService $dashboardService,
         protected InstallmentService $installmentService,
-        protected TreasuryService $treasuryService
+        protected TreasuryService $treasuryService,
+        protected SupplierService $supplierService
     ) {}
 
     public function index(Request $request): View|JsonResponse
@@ -32,16 +34,26 @@ class ContractFinancialController extends Controller
         }
 
         $treasuries = $this->treasuryService->getActiveTreasuries();
+        $suppliers = $this->supplierService->getActiveSuppliers();
 
-        return view('Admin.Accounting.Contract.index', compact('treasuries'));
+        return view('Admin.Accounting.Contract.index', compact('treasuries', 'suppliers'));
     }
 
     public function ledger(ContractTracker $contractTracker): View
     {
-        $contractTracker->load(['revenues.treasury', 'expenses.treasury', 'installments']);
+        $contractTracker->load([
+            'supplier',
+            'revenues.treasury',
+            'expenses.treasury',
+            'expenses.supplier',
+            'expenses.admin',
+            'expenses.expenseType.expenseCategory',
+            'installments',
+        ]);
         $treasuries = $this->treasuryService->getActiveTreasuries();
+        $suppliers = $this->supplierService->getActiveSuppliers();
 
-        return view('Admin.Accounting.Contract.ledger', compact('contractTracker', 'treasuries'));
+        return view('Admin.Accounting.Contract.ledger', compact('contractTracker', 'treasuries', 'suppliers'));
     }
 
     public function updatePrice(UpdateContractPriceRequest $request, ContractTracker $contractTracker): JsonResponse

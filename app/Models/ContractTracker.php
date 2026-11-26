@@ -24,6 +24,8 @@ class ContractTracker extends Model
         'passport_number',
         'applicant_name',
         'total_price_eur',
+        'supplier_id',
+        'supplier_cost_eur',
         'job_title',
         'city_name',
         'step',
@@ -41,10 +43,16 @@ class ContractTracker extends Model
         return [
             'step' => 'integer',
             'total_price_eur' => 'decimal:2',
+            'supplier_cost_eur' => 'decimal:2',
             'is_active' => 'boolean',
             'issue_date' => 'date',
             'stage_history' => 'array',
         ];
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function jobApplication(): BelongsTo

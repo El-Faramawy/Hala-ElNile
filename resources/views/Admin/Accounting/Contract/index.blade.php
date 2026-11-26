@@ -47,10 +47,31 @@
                     <input type="hidden" id="priceContractId">
                     <div class="modal-body p-4">
                         <p class="font-weight-bold text-dark mb-2" id="priceApplicantName"></p>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label font-weight-bold">إجمالي قيمة العقد باليورو (€) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="number" step="0.01" min="0" name="total_price_eur" id="modalTotalPriceEur" class="form-control font-weight-bold fs-16 text-primary" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text font-weight-bold">€</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <div class="form-group mb-3">
+                            <label class="form-label font-weight-bold">المورد المرتبط بالعقد <small class="text-muted">(اختياري - مثال: د/ فايز)</small></label>
+                            <select name="supplier_id" id="modalSupplierId" class="form-control">
+                                <option value="">-- بدون تحديد مورد --</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="form-label font-weight-bold">تكلفة / مستحقات المورد من العقد (€) <small class="text-muted">(اختياري)</small></label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" name="supplier_cost_eur" id="modalSupplierCostEur" class="form-control font-weight-bold text-danger" placeholder="0.00">
                                 <div class="input-group-append">
                                     <span class="input-group-text font-weight-bold">€</span>
                                 </div>
@@ -161,9 +182,13 @@
             var contractId = $(this).data('id');
             var name = $(this).data('name');
             var total = $(this).data('total');
+            var supplierId = $(this).data('supplier-id');
+            var supplierCost = $(this).data('supplier-cost');
             $('#priceContractId').val(contractId);
             $('#priceApplicantName').text('المسافر: ' + name);
             $('#modalTotalPriceEur').val(total);
+            $('#modalSupplierId').val(supplierId || '');
+            $('#modalSupplierCostEur').val(supplierCost > 0 ? supplierCost : '');
             $('#updatePriceModal').modal('show');
         });
 
