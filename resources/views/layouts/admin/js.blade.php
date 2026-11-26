@@ -63,17 +63,41 @@
 <!-- SELECT2 JS -->
 <script src="{{url('Admin')}}/assets/plugins/select2/select2.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        if ($.fn.select2) {
-            $('select.select2-filter').each(function () {
-                if (!$(this).hasClass('select2-hidden-accessible')) {
-                    $(this).select2({
-                        width: '100%',
-                        dir: 'rtl'
-                    });
-                }
+    function initFilterSelect2(scope) {
+        if (!$.fn.select2) return;
+        $(scope || document).find('select.select2-filter').each(function () {
+            var $select = $(this);
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+            $select.select2({
+                width: '100%',
+                dir: 'rtl'
             });
+            syncFilterHighlight($select);
+        });
+    }
+
+    function syncFilterHighlight($select) {
+        var val = $select.val();
+        var isActive = val !== null && val !== undefined && String(val).trim() !== '';
+        $select.toggleClass('filter-select-active', isActive);
+        var $s2 = $select.next('.select2-container');
+        if ($s2.length) {
+            $s2.toggleClass('filter-select-active', isActive);
         }
+    }
+
+    $(document).ready(function () {
+        initFilterSelect2(document);
+
+        $(document).on('shown.bs.collapse', '.collapse', function () {
+            initFilterSelect2(this);
+        });
+
+        $(document).on('change', 'select.select2-filter, #expenseFilterForm select, #revenueFilterForm select, #scheduledFilterForm select', function () {
+            syncFilterHighlight($(this));
+        });
     });
 </script>
 

@@ -1223,8 +1223,8 @@
 
     .select2-container--default .select2-results__option[aria-selected="true"],
     .select2-container--default .select2-results__option--selected {
-        background-color: #F5FDEA !important;
-        color: #2E5A1C !important;
+        background-color: #d8f2b5 !important;
+        color: #14532d !important;
         font-weight: 700 !important;
     }
 
