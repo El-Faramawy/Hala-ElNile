@@ -209,6 +209,9 @@ class AccountingDashboardService
                     <button type="button" class="btn btn-outline-primary show-contract-ledger-btn" data-id="'.$contractId.'" data-code="'.$contractCode.'" data-name="'.$applicantName.'" data-total="'.$totalPriceEur.'" title="كشف الحساب وجدولة الدفعات">
                         <i class="fa fa-list-alt mr-1"></i> كشف الحساب
                     </button>
+                    <button type="button" class="btn btn-outline-warning edit-contract-price-btn" data-id="'.$contractId.'" data-name="'.$applicantName.'" data-total="'.$totalPriceEur.'" title="تعديل سعر العقد باليورو">
+                        <i class="fa fa-edit"></i> السعر
+                    </button>
                     <button type="button" class="btn btn-outline-success quick-add-revenue-btn" data-contract-id="'.$contractId.'" data-name="'.$applicantName.'" title="تسجيل دفعة مسددة">
                         <i class="fa fa-plus"></i> قبض
                     </button>

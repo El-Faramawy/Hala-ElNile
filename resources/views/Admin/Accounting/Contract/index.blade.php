@@ -44,6 +44,7 @@
                 </div>
                 <form id="updatePriceForm">
                     @csrf
+                    <input type="hidden" id="priceContractId">
                     <div class="modal-body p-4">
                         <p class="font-weight-bold text-dark mb-2" id="priceApplicantName"></p>
                         <div class="form-group">
@@ -155,6 +156,58 @@
             window.location.href = "{{ url('accounting/contracts') }}/" + contractId + "/ledger";
         });
 
+        // Open Update Contract Price Modal
+        $(document).on('click', '.edit-contract-price-btn', function() {
+            var contractId = $(this).data('id');
+            var name = $(this).data('name');
+            var total = $(this).data('total');
+            $('#priceContractId').val(contractId);
+            $('#priceApplicantName').text('المسافر: ' + name);
+            $('#modalTotalPriceEur').val(total);
+            $('#updatePriceModal').modal('show');
+        });
+
+        $('#updatePriceForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            if ($form.data('is_submitting')) return false;
+            $form.data('is_submitting', true);
+
+            var contractId = $('#priceContractId').val();
+            var $btn = $('#savePriceBtn');
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: "{{ url('accounting/contracts') }}/" + contractId + "/price",
+                type: 'POST',
+                headers: { 'Accept': 'application/json' },
+                data: $form.serialize(),
+                success: function(res) {
+                    $('#updatePriceModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم بنجاح',
+                        text: res.message
+                    });
+                    if ($.fn.DataTable.isDataTable('#exportexample')) {
+                        $('#exportexample').DataTable().ajax.reload(null, false);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'حدث خطأ أثناء تحديث السعر.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: msg
+                    });
+                },
+                complete: function() {
+                    $form.data('is_submitting', false);
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
+
         // Quick Revenue Modal
         $(document).on('click', '.quick-add-revenue-btn', function() {
             var contractId = $(this).data('contract-id');
@@ -169,15 +222,9 @@
         $('#quickCurrencySelect').on('change', function() {
             if ($(this).val() === 'EUR') {
                 $('#quickEurEquivWrap').addClass('d-none');
-                $('#quickEurEquivInput').val($('#quickAmountInput').val());
+                $('#quickEurEquivInput').val('');
             } else {
                 $('#quickEurEquivWrap').removeClass('d-none');
-            }
-        });
-
-        $('#quickAmountInput').on('input', function() {
-            if ($('#quickCurrencySelect').val() === 'EUR') {
-                $('#quickEurEquivInput').val($(this).val());
             }
         });
 

@@ -46,7 +46,10 @@
                     <div class="col-12 col-sm-6 col-md-3 mb-3">
                         <div class="p-3 bg-light rounded border h-100">
                             <small class="text-muted font-weight-bold d-block">قيمة العقد المتفق عليها:</small>
-                            <h3 class="font-weight-bold text-dark mb-0 mt-1">{{ number_format($totalPriceEur, 2) }} €</h3>
+                            <h3 class="font-weight-bold text-dark mb-1 mt-1">{{ number_format($totalPriceEur, 2) }} €</h3>
+                            <button type="button" class="btn btn-xs btn-outline-warning font-weight-bold mt-1" data-toggle="modal" data-target="#editLedgerPriceModal">
+                                <i class="fa fa-edit ml-1"></i> تعديل السعر
+                            </button>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6 col-md-3 mb-3">
@@ -296,6 +299,35 @@
             </form>
         </div>
     </div>
+    <!-- Edit Contract Price Modal -->
+    <div class="modal fade" id="editLedgerPriceModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title font-weight-bold">تعديل قيمة العقد باليورو (€)</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <form id="editLedgerPriceForm">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="form-group mb-0">
+                            <label class="form-label font-weight-bold">إجمالي قيمة العقد باليورو (€) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" name="total_price_eur" class="form-control font-weight-bold fs-16 text-primary" value="{{ $totalPriceEur }}" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text font-weight-bold">€</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary font-weight-bold" id="saveLedgerPriceBtn">حفظ السعر</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -374,6 +406,30 @@
                         location.reload();
                     }
                 });
+            }
+        });
+    });
+
+    $('#editLedgerPriceForm').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        var $btn = $('#saveLedgerPriceBtn');
+        $btn.prop('disabled', true);
+
+        $.ajax({
+            url: "{{ route('accounting.contracts.updatePrice', $contractTracker->id) }}",
+            type: 'POST',
+            headers: { 'Accept': 'application/json' },
+            data: $(this).serialize(),
+            success: function(res) {
+                $('#editLedgerPriceModal').modal('hide');
+                Swal.fire({ icon: 'success', title: 'تم التحديث', text: res.message }).then(() => {
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false);
+                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'حدث خطأ أثناء التحديث.';
+                Swal.fire({ icon: 'error', title: 'خطأ', text: msg });
             }
         });
     });
