@@ -19,9 +19,22 @@ class ExpenseTypeService
         protected ExpenseCategoryRepository $expenseCategoryRepository
     ) {}
 
-    public function getDataTable(): JsonResponse
+    /**
+     * @return array<string, mixed>
+     */
+    public function getIndexDependencies(): array
     {
-        $query = $this->expenseTypeRepository->getDataTableQuery();
+        return [
+            'expenseCategories' => $this->expenseCategoryRepository->getAllActive(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function getDataTable(array $filters = []): JsonResponse
+    {
+        $query = $this->expenseTypeRepository->getDataTableQuery($filters);
 
         return DataTables::of($query)
             ->addColumn('checkbox', fn (ExpenseType $type): string => tableCheckbox($type->id))

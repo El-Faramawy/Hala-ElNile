@@ -1,4 +1,7 @@
-<?php $setting = App\Models\Setting::first(); ?>
+@php
+    $setting = App\Models\Setting::first();
+    $scheduledDueSoon = app(App\Repositories\ScheduledItemRepository::class)->getDueSoonSummary(7);
+@endphp
 
 <!--APP-SIDEBAR-->
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
@@ -42,6 +45,19 @@
         <x-sidebar-link href="{{ route('expenses.index') }}">
             <i class="fe fe-upload side-menu__icon text-danger"></i>
             <span class="side-menu__label">المصروفات وسندات الصرف</span>
+        </x-sidebar-link>
+
+        <x-sidebar-link href="{{ route('scheduled-items.index') }}">
+            <i class="fe fe-calendar side-menu__icon text-warning"></i>
+            <span class="side-menu__label d-flex flex-column" style="line-height: 1.3;">
+                <span>الدفعات والإيرادات المجدولة</span>
+                @if(($scheduledDueSoon['count'] ?? 0) > 0 && ! empty($scheduledDueSoon['earliest_date']))
+                    <small class="text-warning font-weight-bold" style="font-size: 10.5px;">أقرب موعد: {{ $scheduledDueSoon['earliest_date'] }}</small>
+                @endif
+            </span>
+            @if(($scheduledDueSoon['count'] ?? 0) > 0)
+                <span class="badge badge-danger rounded-pill mr-auto px-2 py-1" style="font-size: 11px;">{{ $scheduledDueSoon['count'] }}</span>
+            @endif
         </x-sidebar-link>
 
         <li class="side-item side-item-category">

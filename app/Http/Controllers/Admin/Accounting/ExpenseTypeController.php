@@ -25,12 +25,10 @@ class ExpenseTypeController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
-            return $this->expenseTypeService->getDataTable();
+            return $this->expenseTypeService->getDataTable($request->all());
         }
 
-        $groupedTypes = $this->expenseTypeService->getGroupedExpenseTypes();
-
-        return view('Admin.Accounting.ExpenseType.index', compact('groupedTypes'));
+        return view('Admin.Accounting.ExpenseType.index', $this->expenseTypeService->getIndexDependencies());
     }
 
     public function create(Request $request): View

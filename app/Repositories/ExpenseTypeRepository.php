@@ -12,9 +12,22 @@ class ExpenseTypeRepository
 {
     public function __construct(protected ExpenseType $model) {}
 
-    public function getDataTableQuery(): Builder
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function getDataTableQuery(array $filters = []): Builder
     {
-        return $this->model->newQuery()->with('expenseCategory')->orderBy('id', 'asc');
+        $query = $this->model->newQuery()->with('expenseCategory')->orderBy('id', 'asc');
+
+        if (! empty($filters['expense_category_id'])) {
+            if ($filters['expense_category_id'] === 'none') {
+                $query->whereNull('expense_category_id');
+            } else {
+                $query->where('expense_category_id', (int) $filters['expense_category_id']);
+            }
+        }
+
+        return $query;
     }
 
     public function findById(int $id): ?ExpenseType

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Accounting\ExpenseTypeController;
 use App\Http\Controllers\Admin\Accounting\OverdueInstallmentController;
 use App\Http\Controllers\Admin\Accounting\ReportController;
 use App\Http\Controllers\Admin\Accounting\RevenueController;
+use App\Http\Controllers\Admin\Accounting\ScheduledItemController;
 use App\Http\Controllers\Admin\Accounting\SupplierController;
 use App\Http\Controllers\Admin\Accounting\TreasuryController;
 use App\Http\Controllers\Admin\AuthController;
@@ -75,6 +76,11 @@ Route::prefix('accounting')->middleware('web')->group(function (): void {
         // Expense Types (أنواع المصروفات)
         Route::post('multi_delete_expense_types', [ExpenseTypeController::class, 'multiDelete'])->name('expense-types.multiDelete');
         Route::resource('expense-types', ExpenseTypeController::class);
+
+        // Scheduled Items (الدفعات والإيرادات المجدولة - شهري/سنوي/محدد)
+        Route::post('scheduled-items/{scheduled_item}/process', [ScheduledItemController::class, 'process'])->name('scheduled-items.process');
+        Route::post('multi_delete_scheduled_items', [ScheduledItemController::class, 'multiDelete'])->name('scheduled-items.multiDelete');
+        Route::resource('scheduled-items', ScheduledItemController::class);
 
         // Reports (التقارير المالية والأرباح والخسائر)
         Route::get('reports', [ReportController::class, 'index'])->name('accounting.reports.index');
