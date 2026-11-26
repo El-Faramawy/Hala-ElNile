@@ -14,7 +14,7 @@ class ExpenseTypeRepository
 
     public function getDataTableQuery(): Builder
     {
-        return $this->model->newQuery()->orderBy('id', 'asc');
+        return $this->model->newQuery()->with('expenseCategory')->orderBy('id', 'asc');
     }
 
     public function findById(int $id): ?ExpenseType
@@ -45,9 +45,17 @@ class ExpenseTypeRepository
     /**
      * @return Collection<int, ExpenseType>
      */
+    public function getAllOrdered(): Collection
+    {
+        return $this->model->newQuery()->with('expenseCategory')->orderBy('id', 'asc')->get();
+    }
+
+    /**
+     * @return Collection<int, ExpenseType>
+     */
     public function getAllActive(): Collection
     {
-        return $this->model->where('is_active', true)->orderBy('id', 'asc')->get();
+        return $this->model->with('expenseCategory')->where('is_active', true)->orderBy('id', 'asc')->get();
     }
 
     public function getOtherType(): ?ExpenseType

@@ -8,25 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Accounting\StoreExpenseRequest;
 use App\Http\Requests\Admin\Accounting\UpdateExpenseRequest;
 use App\Http\Requests\Admin\Common\MultiDeleteRequest;
-use App\Models\Admin;
-use App\Models\ContractTracker;
 use App\Models\Expense;
 use App\Services\Accounting\ExpenseService;
-use App\Services\Accounting\ExpenseTypeService;
-use App\Services\Accounting\SupplierService;
-use App\Services\Accounting\TreasuryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ExpenseController extends Controller
 {
-    public function __construct(
-        protected ExpenseService $expenseService,
-        protected ExpenseTypeService $expenseTypeService,
-        protected TreasuryService $treasuryService,
-        protected SupplierService $supplierService
-    ) {}
+    public function __construct(protected ExpenseService $expenseService) {}
 
     public function index(Request $request): View|JsonResponse
     {
@@ -34,24 +24,12 @@ class ExpenseController extends Controller
             return $this->expenseService->getDataTable($request->all());
         }
 
-        $expenseTypes = $this->expenseTypeService->getActiveExpenseTypes();
-        $treasuries = $this->treasuryService->getActiveTreasuries();
-        $suppliers = $this->supplierService->getActiveSuppliers();
-        $admins = Admin::query()->orderBy('name', 'asc')->get();
-        $contracts = ContractTracker::query()->where('is_active', true)->orderBy('applicant_name', 'asc')->get();
-
-        return view('Admin.Accounting.Expense.index', compact('expenseTypes', 'treasuries', 'suppliers', 'admins', 'contracts'));
+        return view('Admin.Accounting.Expense.index', $this->expenseService->getFormDependencies());
     }
 
     public function create(): View
     {
-        $expenseTypes = $this->expenseTypeService->getActiveExpenseTypes();
-        $treasuries = $this->treasuryService->getActiveTreasuries();
-        $suppliers = $this->supplierService->getActiveSuppliers();
-        $admins = Admin::query()->orderBy('name', 'asc')->get();
-        $contracts = ContractTracker::query()->where('is_active', true)->orderBy('applicant_name', 'asc')->get();
-
-        return view('Admin.Accounting.Expense.parts.create', compact('expenseTypes', 'treasuries', 'suppliers', 'admins', 'contracts'));
+        return view('Admin.Accounting.Expense.parts.create', $this->expenseService->getFormDependencies());
     }
 
     public function store(StoreExpenseRequest $request): JsonResponse
@@ -67,13 +45,10 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense): View
     {
-        $expenseTypes = $this->expenseTypeService->getActiveExpenseTypes();
-        $treasuries = $this->treasuryService->getActiveTreasuries();
-        $suppliers = $this->supplierService->getActiveSuppliers();
-        $admins = Admin::query()->orderBy('name', 'asc')->get();
-        $contracts = ContractTracker::query()->where('is_active', true)->orderBy('applicant_name', 'asc')->get();
-
-        return view('Admin.Accounting.Expense.parts.edit', compact('expense', 'expenseTypes', 'treasuries', 'suppliers', 'admins', 'contracts'));
+        return view('Admin.Accounting.Expense.parts.edit', array_merge(
+            ['expense' => $expense],
+            $this->expenseService->getFormDependencies()
+        ));
     }
 
     public function update(UpdateExpenseRequest $request, Expense $expense): JsonResponse

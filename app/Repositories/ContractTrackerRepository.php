@@ -7,10 +7,22 @@ namespace App\Repositories;
 use App\Models\ContractTracker;
 use App\Models\JobApplication;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class ContractTrackerRepository
 {
     public function __construct(protected ContractTracker $model) {}
+
+    /**
+     * @return Collection<int, ContractTracker>
+     */
+    public function getAllActiveOrdered(): Collection
+    {
+        return $this->model->newQuery()
+            ->where('is_active', true)
+            ->orderBy('applicant_name', 'asc')
+            ->get();
+    }
 
     public function getDataTableQuery(): Builder
     {

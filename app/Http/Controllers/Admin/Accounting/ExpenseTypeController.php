@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\Accounting\StoreExpenseTypeRequest;
 use App\Http\Requests\Admin\Accounting\UpdateExpenseTypeRequest;
 use App\Http\Requests\Admin\Common\MultiDeleteRequest;
 use App\Models\ExpenseType;
+use App\Services\Accounting\ExpenseCategoryService;
 use App\Services\Accounting\ExpenseTypeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Illuminate\View\View;
 
 class ExpenseTypeController extends Controller
 {
-    public function __construct(protected ExpenseTypeService $expenseTypeService) {}
+    public function __construct(
+        protected ExpenseTypeService $expenseTypeService,
+        protected ExpenseCategoryService $expenseCategoryService
+    ) {}
 
     public function index(Request $request): View|JsonResponse
     {
@@ -24,12 +28,17 @@ class ExpenseTypeController extends Controller
             return $this->expenseTypeService->getDataTable();
         }
 
-        return view('Admin.Accounting.ExpenseType.index');
+        $groupedTypes = $this->expenseTypeService->getGroupedExpenseTypes();
+
+        return view('Admin.Accounting.ExpenseType.index', compact('groupedTypes'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('Admin.Accounting.ExpenseType.parts.create');
+        $expenseCategories = $this->expenseCategoryService->getActiveExpenseCategories();
+        $selectedCategoryId = $request->query('expense_category_id');
+
+        return view('Admin.Accounting.ExpenseType.parts.create', compact('expenseCategories', 'selectedCategoryId'));
     }
 
     public function store(StoreExpenseTypeRequest $request): JsonResponse
@@ -41,7 +50,9 @@ class ExpenseTypeController extends Controller
 
     public function edit(ExpenseType $expenseType): View
     {
-        return view('Admin.Accounting.ExpenseType.parts.edit', compact('expenseType'));
+        $expenseCategories = $this->expenseCategoryService->getActiveExpenseCategories();
+
+        return view('Admin.Accounting.ExpenseType.parts.edit', compact('expenseType', 'expenseCategories'));
     }
 
     public function update(UpdateExpenseTypeRequest $request, ExpenseType $expenseType): JsonResponse

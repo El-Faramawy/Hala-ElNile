@@ -126,7 +126,13 @@
         <div class="receipt-body">
             <div class="receipt-row">
                 <span class="receipt-label">بند المصروف:</span>
-                <span class="receipt-val">{{ $expense->expenseType?->name ?? 'مصروف عام' }}</span>
+                <span class="receipt-val">
+                    @if($expense->expenseType?->expenseCategory)
+                        {{ $expense->expenseType->expenseCategory->name }} — {{ $expense->expenseType->name }}
+                    @else
+                        {{ $expense->expenseType?->name ?? 'مصروف عام' }}
+                    @endif
+                </span>
             </div>
 
             <div class="receipt-row">

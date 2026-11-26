@@ -14,8 +14,15 @@ class ExpenseRepository
     public function getDataTableQuery(array $filters = []): Builder
     {
         $query = $this->model->newQuery()
-            ->with(['expenseType', 'treasury', 'contractTracker', 'supplier', 'admin', 'conversion'])
+            ->with(['expenseType.expenseCategory', 'treasury', 'contractTracker', 'supplier', 'admin', 'conversion'])
             ->latest('id');
+
+        if (! empty($filters['expense_category_id'])) {
+            $categoryId = (int) $filters['expense_category_id'];
+            $query->whereHas('expenseType', function (Builder $typeBuilder) use ($categoryId): void {
+                $typeBuilder->where('expense_category_id', $categoryId);
+            });
+        }
 
         if (! empty($filters['expense_type_id'])) {
             $query->where('expense_type_id', (int) $filters['expense_type_id']);

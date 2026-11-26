@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\Accounting\ContractFinancialController;
 use App\Http\Controllers\Admin\Accounting\ConversionController;
 use App\Http\Controllers\Admin\Accounting\DashboardController;
+use App\Http\Controllers\Admin\Accounting\ExpenseCategoryController;
 use App\Http\Controllers\Admin\Accounting\ExpenseController;
 use App\Http\Controllers\Admin\Accounting\ExpenseTypeController;
 use App\Http\Controllers\Admin\Accounting\OverdueInstallmentController;
@@ -66,6 +67,10 @@ Route::prefix('accounting')->middleware('web')->group(function (): void {
         // Treasuries (الخزائن وحركة النقدية)
         Route::post('multi_delete_treasuries', [TreasuryController::class, 'multiDelete'])->name('treasuries.multiDelete');
         Route::resource('treasuries', TreasuryController::class);
+
+        // Expense Categories (التصنيفات الرئيسية للمصروفات)
+        Route::post('multi_delete_expense_categories', [ExpenseCategoryController::class, 'multiDelete'])->name('expense-categories.multiDelete');
+        Route::resource('expense-categories', ExpenseCategoryController::class);
 
         // Expense Types (أنواع المصروفات)
         Route::post('multi_delete_expense_types', [ExpenseTypeController::class, 'multiDelete'])->name('expense-types.multiDelete');

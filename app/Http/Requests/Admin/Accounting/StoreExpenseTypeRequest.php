@@ -19,6 +19,7 @@ class StoreExpenseTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'expense_category_id' => ['nullable', 'exists:expense_categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'is_other' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],

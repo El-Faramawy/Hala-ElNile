@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Accounting;
 
 use App\Models\Expense;
+use App\Repositories\AdminRepository;
+use App\Repositories\ContractTrackerRepository;
+use App\Repositories\ExpenseCategoryRepository;
 use App\Repositories\ExpenseRepository;
 use App\Repositories\ExpenseTypeRepository;
+use App\Repositories\SupplierRepository;
 use App\Repositories\TreasuryRepository;
 use App\Traits\UploadTrait;
 use Illuminate\Http\JsonResponse;
@@ -20,9 +24,30 @@ class ExpenseService
 
     public function __construct(
         protected ExpenseRepository $expenseRepository,
+        protected ExpenseCategoryRepository $expenseCategoryRepository,
         protected ExpenseTypeRepository $expenseTypeRepository,
-        protected TreasuryRepository $treasuryRepository
+        protected TreasuryRepository $treasuryRepository,
+        protected SupplierRepository $supplierRepository,
+        protected AdminRepository $adminRepository,
+        protected ContractTrackerRepository $contractTrackerRepository
     ) {}
+
+    /**
+     * Load active lookup collections required by expense filter and form views.
+     *
+     * @return array<string, mixed>
+     */
+    public function getFormDependencies(): array
+    {
+        return [
+            'expenseCategories' => $this->expenseCategoryRepository->getAllActive(),
+            'expenseTypes' => $this->expenseTypeRepository->getAllActive(),
+            'treasuries' => $this->treasuryRepository->getAllActive(),
+            'suppliers' => $this->supplierRepository->getAllActive(),
+            'admins' => $this->adminRepository->getAllOrdered(),
+            'contracts' => $this->contractTrackerRepository->getAllActiveOrdered(),
+        ];
+    }
 
     public function getDataTable(array $filters = []): JsonResponse
     {
@@ -33,12 +58,21 @@ class ExpenseService
             ->addColumn('voucher_no', fn (Expense $expense): string => '<span class="badge badge-default font-weight-bold fs-13 px-2 py-1">#'.$expense->id.'</span>')
             ->addColumn('formatted_date', fn (Expense $expense): string => $expense->transaction_date?->format('Y-m-d') ?? '—')
             ->addColumn('type_badge', function (Expense $expense): string {
-                $typeName = e($expense->expenseType?->name ?? 'مصروف عام');
+                $mainCategory = $expense->expenseType?->expenseCategory?->name;
+                $subName = e($expense->expenseType?->name ?? 'مصروف عام');
+
                 if ($expense->is_auto) {
-                    return '<span class="badge badge-danger px-2 py-1" style="font-size:11px;"><i class="fa fa-cogs mr-1"></i>'.$typeName.' (فارق تحويل)</span>';
+                    return '<span class="badge badge-danger px-2 py-1" style="font-size:11px;"><i class="fa fa-cogs mr-1"></i>'.$subName.' (فارق تحويل)</span>';
                 }
 
-                return '<span class="badge badge-light border text-dark font-weight-bold px-2 py-1" style="font-size:12px;">'.$typeName.'</span>';
+                if ($mainCategory) {
+                    return '<div class="d-flex flex-column align-items-start" style="gap:2px;">'
+                        .'<span class="badge badge-primary px-2 py-1" style="font-size:10px;">'.e($mainCategory).'</span>'
+                        .'<span class="badge badge-light border text-dark font-weight-bold px-2 py-1" style="font-size:12px;">'.$subName.'</span>'
+                        .'</div>';
+                }
+
+                return '<span class="badge badge-light border text-dark font-weight-bold px-2 py-1" style="font-size:12px;">'.$subName.'</span>';
             })
             ->addColumn('amount_formatted', function (Expense $expense): string {
                 $amount = number_format((float) $expense->amount, 2);

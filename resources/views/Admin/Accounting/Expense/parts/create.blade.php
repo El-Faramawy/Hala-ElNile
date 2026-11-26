@@ -1,12 +1,27 @@
 <form action="{{ route('expenses.store') }}" method="POST" id="form" enctype="multipart/form-data">
     @csrf
     <div class="row">
-        <!-- Expense Type -->
+        <!-- Main Expense Category -->
         <div class="col-md-6 mb-3">
-            <label class="form-label font-weight-bold">نوع / بند المصروف <span class="text-danger">*</span></label>
+            <label class="form-label font-weight-bold">التصنيف الرئيسي للمصروف</label>
+            <select id="expenseCategorySelect" class="form-control select2-basic">
+                <option value="">-- جميع التصنيفات الرئيسية --</option>
+                @foreach($expenseCategories as $category)
+                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+                <option value="none">بنود عامة (بدون تصنيف)</option>
+            </select>
+        </div>
+
+        <!-- Expense Type (Sub-category) -->
+        <div class="col-md-6 mb-3">
+            <label class="form-label font-weight-bold">نوع / بند المصروف الفرعي <span class="text-danger">*</span></label>
             <select name="expense_type_id" id="expenseTypeSelect" class="form-control select2-basic" required>
+                <option value="">-- اختر البند الفرعي --</option>
                 @foreach($expenseTypes as $type)
-                    <option value="{{ $type->id }}" data-is-other="{{ $type->is_other ? '1' : '0' }}">
+                    <option value="{{ $type->id }}"
+                            data-category-id="{{ $type->expense_category_id ?? 'none' }}"
+                            data-is-other="{{ $type->is_other ? '1' : '0' }}">
                         {{ $type->name }} {{ $type->is_other ? '(يتطلب توضيح)' : '' }}
                     </option>
                 @endforeach
@@ -14,7 +29,7 @@
         </div>
 
         <!-- Treasury -->
-        <div class="col-md-6 mb-3">
+        <div class="col-md-12 mb-3">
             <label class="form-label font-weight-bold">الخزينة المنصرف منها <span class="text-danger">*</span></label>
             <select name="treasury_id" class="form-control select2-basic" id="expenseTreasurySelect" required>
                 @foreach($treasuries as $treasury)
@@ -134,6 +149,29 @@
 
 <script>
     (function() {
+        var allExpenseTypeOptions = $('#expenseTypeSelect option').clone();
+
+        function filterExpenseTypesByCategory() {
+            var categoryId = $('#expenseCategorySelect').val();
+            var $typeSelect = $('#expenseTypeSelect');
+
+            $typeSelect.empty();
+            $typeSelect.append('<option value="">-- اختر البند الفرعي --</option>');
+
+            allExpenseTypeOptions.each(function() {
+                var val = $(this).val();
+                if (!val) return;
+                var optCatId = String($(this).data('category-id'));
+                if (!categoryId || optCatId === String(categoryId)) {
+                    $typeSelect.append($(this).clone());
+                }
+            });
+
+            $typeSelect.val('').trigger('change');
+        }
+
+        $('#expenseCategorySelect').on('change', filterExpenseTypesByCategory);
+
         function checkExpenseType() {
             var isOther = $('#expenseTypeSelect').find(':selected').data('is-other');
             if (isOther == '1') {

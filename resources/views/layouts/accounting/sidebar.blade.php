@@ -76,6 +76,11 @@
             <span class="side-menu__label">الخزائن وحركة النقدية</span>
         </x-sidebar-link>
 
+        <x-sidebar-link href="{{ route('expense-categories.index') }}">
+            <i class="fe fe-folder side-menu__icon"></i>
+            <span class="side-menu__label">تصنيفات المصروفات الرئيسية</span>
+        </x-sidebar-link>
+
         <x-sidebar-link href="{{ route('expense-types.index') }}">
             <i class="fe fe-tag side-menu__icon"></i>
             <span class="side-menu__label">أنواع وبنود المصروفات</span>

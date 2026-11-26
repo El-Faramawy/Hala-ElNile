@@ -102,9 +102,13 @@ Route (admin.php / web.php)
 ## ✅ DOs
 
 - ✅ Follow the **Repository Pattern** — all DB queries in Repositories
+- ✅ **SOLID Principles (Pragmatic & Simple — بدون تعقيد)**:
+  - **Single Responsibility (SRP)**: Each class/method has one clear job. Controllers only handle HTTP request/response; Services handle business logic & view-data assembly; Repositories handle Eloquent queries; FormRequests handle validation.
+  - **Dependency Injection**: Inject only the required Service(s) into Controllers and Repositories into Services via constructors — never instantiate models or query Eloquent directly inside Controllers.
+  - **DRY & Clean Controllers**: Extract repeated view/dropdown loading into a dedicated Service method (e.g. `getFormDependencies()`) so Controller methods stay 2–5 lines and easy to read.
 - ✅ **Clean Code & Variable Naming**: Use full, descriptive, intention-revealing variable names (e.g. `$contactMessage`, `$traveler`, `$jobApplication`, `$contractTracker`, `$exception`).
-- ✅ **PHP CS & PSR-12 Compliance**: Strictly adhere to PSR-12 coding standard. Run Laravel Pint (`vendor/bin/pint app`) to guarantee clean formatting.
-- ✅ **PHP Mess Detector (PHPMD) Standards**: Keep methods focused and short, eliminate dead/unused code or imports, avoid high cyclomatic complexity.
+- ✅ **PHP CS & PSR-12 Compliance**: Strictly adhere to PSR-12 coding standard. Run Laravel Pint (`vendor/bin/pint --test app`) to guarantee clean formatting.
+- ✅ **PHP Mess Detector (PHPMD) Standards**: Keep methods focused and short, use early returns, eliminate dead/unused code or imports, avoid high cyclomatic complexity.
 - ✅ **Strict FormRequest Rule**: Always use an external dedicated `FormRequest` class for all input validation (both store and update operations) — NEVER validate inline inside any controller via `$request->validate()` or `Validator::make()`.
 - ✅ Group Requests by domain in `app/Http/Requests/Admin/{Domain}/` (e.g. `StoreJobRequest`, `UpdateJobRequest`, `UpdateJobApplicationRequest`, `UpdateContactMessageRequest`).
 - ✅ Keep controllers **thin**: validate through FormRequest type-hint → call service → return response

@@ -2,12 +2,30 @@
     @csrf
     @method('PUT')
     <div class="row">
-        <!-- Expense Type -->
+        <!-- Main Expense Category -->
         <div class="col-md-6 mb-3">
-            <label class="form-label font-weight-bold">نوع / بند المصروف <span class="text-danger">*</span></label>
+            <label class="form-label font-weight-bold">التصنيف الرئيسي للمصروف</label>
+            @php $currentCatId = $expense->expenseType?->expense_category_id; @endphp
+            <select id="editExpenseCategorySelect" class="form-control select2-basic">
+                <option value="">-- جميع التصنيفات الرئيسية --</option>
+                @foreach($expenseCategories as $category)
+                    <option value="{{ $category->id }}" {{ (int) $currentCatId === (int) $category->id ? 'selected' : '' }}>
+                        {{ $category->name }}
+                    </option>
+                @endforeach
+                <option value="none" {{ $expense->expenseType && $currentCatId === null ? 'selected' : '' }}>بنود عامة (بدون تصنيف)</option>
+            </select>
+        </div>
+
+        <!-- Expense Type (Sub-category) -->
+        <div class="col-md-6 mb-3">
+            <label class="form-label font-weight-bold">نوع / بند المصروف الفرعي <span class="text-danger">*</span></label>
             <select name="expense_type_id" id="editExpenseTypeSelect" class="form-control select2-basic" required>
                 @foreach($expenseTypes as $type)
-                    <option value="{{ $type->id }}" data-is-other="{{ $type->is_other ? '1' : '0' }}" {{ $expense->expense_type_id == $type->id ? 'selected' : '' }}>
+                    <option value="{{ $type->id }}"
+                            data-category-id="{{ $type->expense_category_id ?? 'none' }}"
+                            data-is-other="{{ $type->is_other ? '1' : '0' }}"
+                            {{ $expense->expense_type_id == $type->id ? 'selected' : '' }}>
                         {{ $type->name }}
                     </option>
                 @endforeach
@@ -15,7 +33,7 @@
         </div>
 
         <!-- Treasury -->
-        <div class="col-md-6 mb-3">
+        <div class="col-md-12 mb-3">
             <label class="form-label font-weight-bold">الخزينة المنصرف منها <span class="text-danger">*</span></label>
             <select name="treasury_id" class="form-control select2-basic" id="editExpenseTreasurySelect" required>
                 @foreach($treasuries as $treasury)
@@ -121,6 +139,37 @@
 
 <script>
     (function() {
+        var allEditExpenseTypeOptions = $('#editExpenseTypeSelect option').clone();
+
+        function filterEditExpenseTypes(keepCurrentValue) {
+            var categoryId = $('#editExpenseCategorySelect').val();
+            var $typeSelect = $('#editExpenseTypeSelect');
+            var currentVal = keepCurrentValue ? $typeSelect.val() : '';
+
+            $typeSelect.empty();
+            $typeSelect.append('<option value="">-- اختر البند الفرعي --</option>');
+
+            allEditExpenseTypeOptions.each(function() {
+                var val = $(this).val();
+                if (!val) return;
+                var optCatId = String($(this).data('category-id'));
+                if (!categoryId || optCatId === String(categoryId)) {
+                    $typeSelect.append($(this).clone());
+                }
+            });
+
+            if (currentVal && $typeSelect.find('option[value="' + currentVal + '"]').length) {
+                $typeSelect.val(currentVal);
+            } else {
+                $typeSelect.val('');
+            }
+            $typeSelect.trigger('change');
+        }
+
+        $('#editExpenseCategorySelect').on('change', function() {
+            filterEditExpenseTypes(false);
+        });
+
         $('#editExpenseTypeSelect').on('change', function() {
             var isOther = $(this).find(':selected').data('is-other');
             if (isOther == '1') {
@@ -136,5 +185,7 @@
             var curr = $(this).val();
             $('#editExpenseCurrencySymbol').text(curr === 'EUR' ? '€' : 'ج.م');
         });
+
+        filterEditExpenseTypes(true);
     })();
 </script>

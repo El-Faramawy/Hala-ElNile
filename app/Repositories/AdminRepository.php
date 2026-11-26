@@ -6,10 +6,19 @@ namespace App\Repositories;
 
 use App\Models\Admin;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class AdminRepository
 {
     public function __construct(protected Admin $model) {}
+
+    /**
+     * @return Collection<int, Admin>
+     */
+    public function getAllOrdered(): Collection
+    {
+        return $this->model->newQuery()->orderBy('name', 'asc')->get();
+    }
 
     public function getDataTableQuery(int $currentAdminId): Builder
     {

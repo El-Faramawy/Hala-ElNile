@@ -25,12 +25,24 @@
                 <div class="row">
                     <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
                         <label class="form-label font-weight-bold fs-12 text-muted mb-1">
-                            <i class="fe fe-tag text-primary ml-1"></i> بند المصروف:
+                            <i class="fe fe-folder text-primary ml-1"></i> التصنيف الرئيسي:
+                        </label>
+                        <select name="expense_category_id" id="filter_expense_category_id" class="form-control form-control-solid select2-filter w-100">
+                            <option value="">جميع التصنيفات الرئيسية</option>
+                            @foreach($expenseCategories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+                        <label class="form-label font-weight-bold fs-12 text-muted mb-1">
+                            <i class="fe fe-tag text-primary ml-1"></i> بند المصروف الفرعي:
                         </label>
                         <select name="expense_type_id" id="filter_expense_type_id" class="form-control form-control-solid select2-filter w-100">
                             <option value="">جميع بنود المصروفات</option>
                             @foreach($expenseTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" data-category-id="{{ $type->expense_category_id ?? '' }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -156,6 +168,7 @@
 
         // Send filter parameters via originalDataFunc
         var originalDataFunc = function(d) {
+            d.expense_category_id = $('#filter_expense_category_id').val();
             d.expense_type_id = $('#filter_expense_type_id').val();
             d.treasury_id = $('#filter_treasury_id').val();
             d.admin_id = $('#filter_admin_id').val();
@@ -168,6 +181,7 @@
 
         function updateActiveFilterBadge() {
             var activeCount = 0;
+            if ($('#filter_expense_category_id').val()) activeCount++;
             if ($('#filter_expense_type_id').val()) activeCount++;
             if ($('#filter_treasury_id').val()) activeCount++;
             if ($('#filter_admin_id').val()) activeCount++;
@@ -222,8 +236,25 @@
                 }
             });
 
+            var allFilterTypeOptions = $('#filter_expense_type_id option').clone();
+            $('#filter_expense_category_id').off('change').on('change', function() {
+                var catId = $(this).val();
+                var $typeFilter = $('#filter_expense_type_id');
+                $typeFilter.empty().append('<option value="">جميع بنود المصروفات</option>');
+                allFilterTypeOptions.each(function() {
+                    var val = $(this).val();
+                    if (!val) return;
+                    var optCatId = String($(this).data('category-id'));
+                    if (!catId || optCatId === String(catId)) {
+                        $typeFilter.append($(this).clone());
+                    }
+                });
+                $typeFilter.val('').trigger('change.select2');
+                reloadExpensesTable();
+            });
+
             // Auto-reload when dropdown filter changes (single debounced request)
-            $('#expenseFilterForm select').off('change').on('change', function() {
+            $('#expenseFilterForm select').not('#filter_expense_category_id').off('change').on('change', function() {
                 reloadExpensesTable();
             });
         });

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExpenseType extends Model
@@ -18,6 +19,7 @@ class ExpenseType extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'expense_category_id',
         'name',
         'is_other',
         'is_active',
@@ -29,6 +31,11 @@ class ExpenseType extends Model
             'is_other' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function expenseCategory(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
     }
 
     public function expenses(): HasMany
