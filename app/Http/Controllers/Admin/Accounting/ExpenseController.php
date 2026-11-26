@@ -27,9 +27,11 @@ class ExpenseController extends Controller
         return view('Admin.Accounting.Expense.index', $this->expenseService->getFormDependencies());
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('Admin.Accounting.Expense.parts.create', $this->expenseService->getFormDependencies());
+        $scheduledItemId = $request->filled('scheduled_item_id') ? (int) $request->query('scheduled_item_id') : null;
+
+        return view('Admin.Accounting.Expense.parts.create', $this->expenseService->getFormDependencies($scheduledItemId));
     }
 
     public function store(StoreExpenseRequest $request): JsonResponse

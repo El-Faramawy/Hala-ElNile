@@ -95,63 +95,7 @@
         </x-list.card-body>
     </x-list.card>
 
-    <x-list.modal name="بند مجدول" :save_button="true"></x-list.modal>
-
-    <!-- Process Payment/Collection Modal -->
-    <div class="modal fade" id="processScheduledModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content" style="border-radius: 12px;">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title font-weight-bold" id="processModalTitle">تسجيل السداد / التحصيل</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <form id="processScheduledForm">
-                    @csrf
-                    <input type="hidden" id="processScheduledId">
-                    <div class="modal-body p-4">
-                        <p class="font-weight-bold text-dark mb-3" id="processScheduledLabel"></p>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label font-weight-bold">الخزينة <span class="text-danger">*</span></label>
-                            <select name="treasury_id" id="processTreasuryId" class="form-control" required>
-                                @foreach($treasuries as $treasury)
-                                    <option value="{{ $treasury->id }}" data-currency="{{ $treasury->currency }}">
-                                        {{ $treasury->name }} ({{ $treasury->currency }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label font-weight-bold">المبلغ <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.01" name="amount" id="processAmount" class="form-control font-weight-bold" required>
-                        </div>
-
-                        <div class="form-group mb-3 d-none" id="processEurEquivWrap">
-                            <label class="form-label font-weight-bold">ما يعادله باليورو (€) <small class="text-muted">(اختياري للإيراد)</small></label>
-                            <input type="number" step="0.01" min="0" name="eur_equivalent" id="processEurEquiv" class="form-control">
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label font-weight-bold">تاريخ التنفيذ <span class="text-danger">*</span></label>
-                            <input type="date" name="transaction_date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                        </div>
-
-                        <div class="form-group mb-0">
-                            <label class="form-label font-weight-bold">ملاحظات</label>
-                            <input type="text" name="notes" class="form-control" placeholder="ملاحظات اختيارية...">
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-success font-weight-bold" id="confirmProcessBtn">
-                            <i class="fa fa-check ml-1"></i> تأكيد التنفيذ وتجديد الموعد
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <x-list.modal name="بند مجدول" :save_button="true" :save_and_print="true"></x-list.modal>
 @endsection
 
 @push('admin_js')
@@ -197,57 +141,31 @@
                 $('#filter_sched_due_status').val('due_soon').trigger('change');
             });
 
-            $(document).on('click', '.process-scheduled-btn', function() {
-                var id = $(this).data('id');
-                var title = $(this).data('title');
-                var type = $(this).data('type');
-                var amount = $(this).data('amount');
-                var currency = $(this).data('currency');
-                var treasuryId = $(this).data('treasury-id');
-
-                $('#processScheduledId').val(id);
-                $('#processScheduledLabel').text((type === 'revenue' ? 'تحصيل إيراد: ' : 'سداد مصروف: ') + title + ' (' + amount + ' ' + currency + ')');
-                $('#processModalTitle').text(type === 'revenue' ? 'تأكيد تحصيل الإيراد المجدول' : 'تأكيد سداد المصروف المجدول');
-                $('#processAmount').val(amount);
-                if (treasuryId) {
-                    $('#processTreasuryId').val(treasuryId);
-                }
-                if (type === 'revenue' && currency === 'EGP') {
-                    $('#processEurEquivWrap').removeClass('d-none');
-                } else {
-                    $('#processEurEquivWrap').addClass('d-none');
-                }
-                $('#processScheduledModal').modal('show');
+            $(document).on('click', '#addBtn', function() {
+                window.reloadAfterModalSave = true;
+                $('#Modal .modal-header h2').text('إضافة بند مجدول');
             });
 
-            $('#processScheduledForm').off('submit').on('submit', function(e) {
-                e.preventDefault();
-                var $form = $(this);
-                if ($form.data('is_submitting')) return false;
-                $form.data('is_submitting', true);
+            $(document).on('click', '.editBtn', function() {
+                window.reloadAfterModalSave = true;
+                $('#Modal .modal-header h2').text('تعديل بند مجدول');
+            });
 
-                var id = $('#processScheduledId').val();
-                var $btn = $('#confirmProcessBtn');
-                $btn.prop('disabled', true);
+            // Open full Expense or Revenue create modal pre-filled with the scheduled item's details
+            $(document).on('click', '.process-scheduled-btn', function() {
+                var id = $(this).data('id');
+                var type = $(this).data('type');
+                var url = type === 'revenue'
+                    ? "{{ route('revenues.create') }}?scheduled_item_id=" + id
+                    : "{{ route('expenses.create') }}?scheduled_item_id=" + id;
 
-                $.ajax({
-                    url: "{{ url('accounting/scheduled-items') }}/" + id + "/process",
-                    type: 'POST',
-                    headers: { 'Accept': 'application/json' },
-                    data: $form.serialize(),
-                    success: function(res) {
-                        $('#processScheduledModal').modal('hide');
-                        Swal.fire({ icon: 'success', title: 'تم بنجاح', text: res.message }).then(function() {
-                            location.reload();
-                        });
-                    },
-                    error: function(xhr) {
-                        var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'حدث خطأ أثناء التنفيذ.';
-                        Swal.fire({ icon: 'error', title: 'خطأ', text: msg });
-                    },
-                    complete: function() {
-                        $form.data('is_submitting', false);
-                        $btn.prop('disabled', false);
+                window.reloadAfterModalSave = true;
+                $('#Modal .modal-header h2').text(type === 'revenue' ? 'تسجيل تحصيل إيراد مجدول' : 'تسجيل سداد مصروف مجدول');
+                $('#Modal').modal('show');
+                $('#form-load').html('<div class="text-center p-4"><i class="fa fa-spinner fa-spin fa-2x text-primary"></i></div>');
+                $('#form-load').load(url, function() {
+                    if (typeof initModalPlugins === 'function') {
+                        initModalPlugins();
                     }
                 });
             });

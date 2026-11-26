@@ -1,5 +1,19 @@
+@php
+    $prefillCatId = $scheduledItem?->expenseType?->expense_category_id;
+    $prefillTypeId = $scheduledItem?->expense_type_id;
+    $prefillTreasuryId = $scheduledItem?->treasury_id;
+    $prefillCurrency = $scheduledItem?->currency ?? 'EGP';
+    $prefillAmount = $scheduledItem?->amount ?? '';
+    $prefillSupplierId = $scheduledItem?->supplier_id;
+    $prefillOtherDetails = $scheduledItem?->title ?? '';
+    $prefillNotes = $scheduledItem ? ($scheduledItem->notes ?: $scheduledItem->title) : '';
+@endphp
+
 <form action="{{ route('expenses.store') }}" method="POST" id="form" enctype="multipart/form-data">
     @csrf
+    @if(! empty($scheduledItem))
+        <input type="hidden" name="scheduled_item_id" value="{{ $scheduledItem->id }}">
+    @endif
     <div class="row">
         <!-- Main Expense Category -->
         <div class="col-md-6 mb-3">
@@ -7,9 +21,11 @@
             <select id="expenseCategorySelect" class="form-control select2-basic">
                 <option value="">-- جميع التصنيفات الرئيسية --</option>
                 @foreach($expenseCategories as $category)
-                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    <option value="{{ $category->id }}" {{ (string) $prefillCatId === (string) $category->id ? 'selected' : '' }}>
+                        {{ $category->name }}
+                    </option>
                 @endforeach
-                <option value="none">بنود عامة (بدون تصنيف)</option>
+                <option value="none" {{ $prefillTypeId && $prefillCatId === null ? 'selected' : '' }}>بنود عامة (بدون تصنيف)</option>
             </select>
         </div>
 
@@ -21,7 +37,8 @@
                 @foreach($expenseTypes as $type)
                     <option value="{{ $type->id }}"
                             data-category-id="{{ $type->expense_category_id ?? 'none' }}"
-                            data-is-other="{{ $type->is_other ? '1' : '0' }}">
+                            data-is-other="{{ $type->is_other ? '1' : '0' }}"
+                            {{ (int) $prefillTypeId === (int) $type->id ? 'selected' : '' }}>
                         {{ $type->name }} {{ $type->is_other ? '(يتطلب توضيح)' : '' }}
                     </option>
                 @endforeach
@@ -33,7 +50,9 @@
             <label class="form-label font-weight-bold">الخزينة المنصرف منها <span class="text-danger">*</span></label>
             <select name="treasury_id" class="form-control select2-basic" id="expenseTreasurySelect" required>
                 @foreach($treasuries as $treasury)
-                    <option value="{{ $treasury->id }}" data-currency="{{ $treasury->currency }}">
+                    <option value="{{ $treasury->id }}"
+                            data-currency="{{ $treasury->currency }}"
+                            {{ (int) $prefillTreasuryId === (int) $treasury->id ? 'selected' : '' }}>
                         {{ $treasury->name }} (رصيدها: {{ number_format((float)$treasury->balance, 2) }} {{ $treasury->currency }})
                     </option>
                 @endforeach
@@ -44,8 +63,8 @@
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">عملة الصرف <span class="text-danger">*</span></label>
             <select name="currency" id="expenseCurrencySelect" class="form-control" required>
-                <option value="EGP" selected>جنيه مصري (EGP)</option>
-                <option value="EUR">يورو (€ EUR)</option>
+                <option value="EGP" {{ $prefillCurrency === 'EGP' ? 'selected' : '' }}>جنيه مصري (EGP)</option>
+                <option value="EUR" {{ $prefillCurrency === 'EUR' ? 'selected' : '' }}>يورو (€ EUR)</option>
             </select>
         </div>
 
@@ -53,9 +72,9 @@
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">المبلغ المنصرف <span class="text-danger">*</span></label>
             <div class="input-group">
-                <input type="number" step="0.01" min="0.01" name="amount" class="form-control font-weight-bold text-danger fs-16" placeholder="0.00" required>
+                <input type="number" step="0.01" min="0.01" name="amount" class="form-control font-weight-bold text-danger fs-16" placeholder="0.00" value="{{ $prefillAmount }}" required>
                 <div class="input-group-append">
-                    <span class="input-group-text font-weight-bold" id="expenseCurrencySymbol">ج.م</span>
+                    <span class="input-group-text font-weight-bold" id="expenseCurrencySymbol">{{ $prefillCurrency === 'EUR' ? '€' : 'ج.م' }}</span>
                 </div>
             </div>
         </div>
@@ -66,7 +85,7 @@
                 <label class="form-label font-weight-bold text-dark">
                     <i class="fe fe-alert-circle text-warning ml-1"></i> بيان وتفاصيل المصروف <span class="text-danger">* (إجباري عند اختيار أخرى)</span>
                 </label>
-                <input type="text" name="other_details" id="otherDetailsInput" class="form-control font-weight-semibold" placeholder="اكتب بالتفصيل في ماذا تم صرف هذا المبلغ...">
+                <input type="text" name="other_details" id="otherDetailsInput" class="form-control font-weight-semibold" value="{{ $prefillOtherDetails }}" placeholder="اكتب بالتفصيل في ماذا تم صرف هذا المبلغ...">
             </div>
         </div>
 
@@ -75,7 +94,7 @@
             <label class="form-label font-weight-bold">المستفيد من المصروف</label>
             <div class="d-flex align-items-center mb-2" style="gap: 20px;">
                 <label class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" name="expense_beneficiary" value="none" checked>
+                    <input type="radio" class="custom-control-input" name="expense_beneficiary" value="none" {{ $prefillSupplierId ? '' : 'checked' }}>
                     <span class="custom-control-label font-weight-bold">مصروف عام</span>
                 </label>
                 <label class="custom-control custom-radio">
@@ -83,7 +102,7 @@
                     <span class="custom-control-label font-weight-bold">موظف (راتب / سلفة)</span>
                 </label>
                 <label class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" name="expense_beneficiary" value="supplier">
+                    <input type="radio" class="custom-control-input" name="expense_beneficiary" value="supplier" {{ $prefillSupplierId ? 'checked' : '' }}>
                     <span class="custom-control-label font-weight-bold">مورد / جهة خارجية</span>
                 </label>
                 <label class="custom-control custom-radio">
@@ -105,18 +124,20 @@
         </div>
 
         <!-- Supplier Select -->
-        <div class="col-md-12 mb-3 d-none" id="supplierSelectWrap">
+        <div class="col-md-12 mb-3 {{ $prefillSupplierId ? '' : 'd-none' }}" id="supplierSelectWrap">
             <label class="form-label font-weight-bold">اختيار المورد</label>
             <select name="supplier_id" class="form-control select2-basic" id="supplierSelect">
                 <option value="">-- اختر المورد --</option>
                 @foreach($suppliers as $supplier)
-                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                    <option value="{{ $supplier->id }}" {{ (int) $prefillSupplierId === (int) $supplier->id ? 'selected' : '' }}>
+                        {{ $supplier->name }}
+                    </option>
                 @endforeach
             </select>
         </div>
 
         <!-- Contract Select -->
-        <div class="col-md-12 mb-3 d-none" id="contractSelectWrap">
+        <div class="col-md-12 mb-3 {{ $prefillSupplierId ? '' : 'd-none' }}" id="contractSelectWrap">
             <label class="form-label font-weight-bold">اختيار العقد المرتبط <small class="text-muted" id="contractOptionalHint">(اختياري)</small></label>
             <select name="contract_tracker_id" class="form-control select2-basic" id="contractSelect">
                 <option value="">-- اختر العقد أو ابحث بالاسم أو الكود --</option>
@@ -135,7 +156,7 @@
         <!-- Notes -->
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">ملاحظات إضافية</label>
-            <input type="text" name="notes" class="form-control" placeholder="ملاحظات اختيارية...">
+            <input type="text" name="notes" class="form-control" value="{{ $prefillNotes }}" placeholder="ملاحظات اختيارية...">
         </div>
 
         <!-- Receipt Image (Optional) -->

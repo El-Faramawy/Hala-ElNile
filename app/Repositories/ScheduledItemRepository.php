@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\ScheduledItem;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 class ScheduledItemRepository
@@ -82,5 +83,31 @@ class ScheduledItemRepository
             'count' => $count,
             'earliest_date' => $earliestItem?->next_due_date?->format('Y-m-d'),
         ];
+    }
+
+    public function markAsProcessed(int $scheduledItemId, string $transactionDate): void
+    {
+        $scheduledItem = $this->findById($scheduledItemId);
+        if (! $scheduledItem) {
+            return;
+        }
+
+        $updatePayload = [
+            'last_paid_at' => $transactionDate,
+        ];
+
+        if ($scheduledItem->frequency === 'monthly') {
+            $updatePayload['next_due_date'] = Carbon::parse($scheduledItem->next_due_date)
+                ->addMonthNoOverflow()
+                ->toDateString();
+        } elseif ($scheduledItem->frequency === 'yearly') {
+            $updatePayload['next_due_date'] = Carbon::parse($scheduledItem->next_due_date)
+                ->addYearNoOverflow()
+                ->toDateString();
+        } else {
+            $updatePayload['is_active'] = false;
+        }
+
+        $this->update($scheduledItem, $updatePayload);
     }
 }

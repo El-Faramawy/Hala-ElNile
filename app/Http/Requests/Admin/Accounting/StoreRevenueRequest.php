@@ -28,6 +28,7 @@ class StoreRevenueRequest extends FormRequest
             'transaction_date' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'scheduled_item_id' => ['nullable', 'integer', 'exists:scheduled_items,id'],
         ];
     }
 }

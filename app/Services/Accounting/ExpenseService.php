@@ -10,6 +10,7 @@ use App\Repositories\ContractTrackerRepository;
 use App\Repositories\ExpenseCategoryRepository;
 use App\Repositories\ExpenseRepository;
 use App\Repositories\ExpenseTypeRepository;
+use App\Repositories\ScheduledItemRepository;
 use App\Repositories\SupplierRepository;
 use App\Repositories\TreasuryRepository;
 use App\Traits\UploadTrait;
@@ -29,7 +30,8 @@ class ExpenseService
         protected TreasuryRepository $treasuryRepository,
         protected SupplierRepository $supplierRepository,
         protected AdminRepository $adminRepository,
-        protected ContractTrackerRepository $contractTrackerRepository
+        protected ContractTrackerRepository $contractTrackerRepository,
+        protected ScheduledItemRepository $scheduledItemRepository
     ) {}
 
     /**
@@ -37,8 +39,11 @@ class ExpenseService
      *
      * @return array<string, mixed>
      */
-    public function getFormDependencies(): array
+    public function getFormDependencies(?int $scheduledItemId = null): array
     {
+        $scheduledItem = $scheduledItemId ? $this->scheduledItemRepository->findById($scheduledItemId) : null;
+        $scheduledItem?->load('expenseType');
+
         return [
             'expenseCategories' => $this->expenseCategoryRepository->getAllActive(),
             'expenseTypes' => $this->expenseTypeRepository->getAllActive(),
@@ -46,6 +51,7 @@ class ExpenseService
             'suppliers' => $this->supplierRepository->getAllActive(),
             'admins' => $this->adminRepository->getAllOrdered(),
             'contracts' => $this->contractTrackerRepository->getAllActiveOrdered(),
+            'scheduledItem' => $scheduledItem,
         ];
     }
 
@@ -134,6 +140,9 @@ class ExpenseService
     public function store(array $data): Expense
     {
         return DB::transaction(function () use ($data): Expense {
+            $scheduledItemId = isset($data['scheduled_item_id']) ? (int) $data['scheduled_item_id'] : null;
+            unset($data['scheduled_item_id']);
+
             if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
                 $data['image'] = $this->uploadImage($data['image'], 'expenses');
             }
@@ -143,6 +152,10 @@ class ExpenseService
             $treasury = $this->treasuryRepository->findById((int) $data['treasury_id']);
             if ($treasury) {
                 $this->treasuryRepository->decrementBalance($treasury, (float) $data['amount']);
+            }
+
+            if ($scheduledItemId) {
+                $this->scheduledItemRepository->markAsProcessed($scheduledItemId, (string) $data['transaction_date']);
             }
 
             return $expense;

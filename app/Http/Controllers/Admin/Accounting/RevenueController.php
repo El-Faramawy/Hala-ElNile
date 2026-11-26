@@ -38,13 +38,15 @@ class RevenueController extends Controller
         return view('Admin.Accounting.Revenue.index', compact('treasuries', 'suppliers', 'contracts'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $treasuries = $this->treasuryService->getActiveTreasuries();
         $suppliers = $this->supplierService->getActiveSuppliers();
         $contracts = ContractTracker::query()->where('is_active', true)->orderBy('applicant_name', 'asc')->get();
+        $scheduledItemId = $request->filled('scheduled_item_id') ? (int) $request->query('scheduled_item_id') : null;
+        $scheduledItem = $this->revenueService->findScheduledItem($scheduledItemId);
 
-        return view('Admin.Accounting.Revenue.parts.create', compact('treasuries', 'suppliers', 'contracts'));
+        return view('Admin.Accounting.Revenue.parts.create', compact('treasuries', 'suppliers', 'contracts', 'scheduledItem'));
     }
 
     public function store(StoreRevenueRequest $request): JsonResponse

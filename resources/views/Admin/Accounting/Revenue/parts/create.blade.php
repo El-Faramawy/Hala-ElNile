@@ -1,12 +1,26 @@
+@php
+    $prefillTreasuryId = $scheduledItem?->treasury_id;
+    $prefillCurrency = $scheduledItem?->currency ?? 'EGP';
+    $prefillAmount = $scheduledItem?->amount ?? '';
+    $prefillSupplierId = $scheduledItem?->supplier_id;
+    $prefillNotes = $scheduledItem ? ($scheduledItem->notes ?: $scheduledItem->title) : '';
+    $prefillSource = $prefillSupplierId ? 'supplier' : (! empty($scheduledItem) ? 'general' : 'contract');
+@endphp
+
 <form action="{{ route('revenues.store') }}" method="POST" id="form" enctype="multipart/form-data">
     @csrf
+    @if(! empty($scheduledItem))
+        <input type="hidden" name="scheduled_item_id" value="{{ $scheduledItem->id }}">
+    @endif
     <div class="row">
         <!-- Treasury -->
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">الخزينة المستلمة <span class="text-danger">*</span></label>
             <select name="treasury_id" class="form-control select2-basic" id="revenueTreasurySelect" required>
                 @foreach($treasuries as $treasury)
-                    <option value="{{ $treasury->id }}" data-currency="{{ $treasury->currency }}">
+                    <option value="{{ $treasury->id }}"
+                            data-currency="{{ $treasury->currency }}"
+                            {{ (int) $prefillTreasuryId === (int) $treasury->id ? 'selected' : '' }}>
                         {{ $treasury->name }} ({{ $treasury->currency === 'EUR' ? '€ يورو' : 'ج.م جنيه' }})
                     </option>
                 @endforeach
@@ -17,8 +31,8 @@
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">العملة المستلمة <span class="text-danger">*</span></label>
             <select name="received_currency" id="revenueCurrencySelect" class="form-control" required>
-                <option value="EGP" selected>جنيه مصري (EGP)</option>
-                <option value="EUR">يورو (€ EUR)</option>
+                <option value="EGP" {{ $prefillCurrency === 'EGP' ? 'selected' : '' }}>جنيه مصري (EGP)</option>
+                <option value="EUR" {{ $prefillCurrency === 'EUR' ? 'selected' : '' }}>يورو (€ EUR)</option>
             </select>
         </div>
 
@@ -26,9 +40,9 @@
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">المبلغ المستلم <span class="text-danger">*</span></label>
             <div class="input-group">
-                <input type="number" step="0.01" min="0.01" name="amount" id="revenueAmountInput" class="form-control font-weight-bold fs-16" placeholder="0.00" required>
+                <input type="number" step="0.01" min="0.01" name="amount" id="revenueAmountInput" class="form-control font-weight-bold fs-16" placeholder="0.00" value="{{ $prefillAmount }}" required>
                 <div class="input-group-append">
-                    <span class="input-group-text font-weight-bold" id="amountCurrencySymbol">ج.م</span>
+                    <span class="input-group-text font-weight-bold" id="amountCurrencySymbol">{{ $prefillCurrency === 'EUR' ? '€' : 'ج.م' }}</span>
                 </div>
             </div>
         </div>
@@ -50,22 +64,22 @@
             <label class="form-label font-weight-bold">الجهة الموردة للإيراد</label>
             <div class="d-flex align-items-center mb-2" style="gap: 20px;">
                 <label class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" name="revenue_source" value="contract" checked>
+                    <input type="radio" class="custom-control-input" name="revenue_source" value="contract" {{ $prefillSource === 'contract' ? 'checked' : '' }}>
                     <span class="custom-control-label font-weight-bold">مسافر / عقد سفر</span>
                 </label>
                 <label class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" name="revenue_source" value="supplier">
+                    <input type="radio" class="custom-control-input" name="revenue_source" value="supplier" {{ $prefillSource === 'supplier' ? 'checked' : '' }}>
                     <span class="custom-control-label font-weight-bold">مورد / وكيل</span>
                 </label>
                 <label class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" name="revenue_source" value="general">
+                    <input type="radio" class="custom-control-input" name="revenue_source" value="general" {{ $prefillSource === 'general' ? 'checked' : '' }}>
                     <span class="custom-control-label font-weight-bold">إيراد عام / أخرى</span>
                 </label>
             </div>
         </div>
 
         <!-- Contract Select -->
-        <div class="col-md-12 mb-3" id="contractFieldWrap">
+        <div class="col-md-12 mb-3 {{ $prefillSource === 'contract' ? '' : 'd-none' }}" id="contractFieldWrap">
             <label class="form-label font-weight-bold">اختيار العقد / المسافر</label>
             <select name="contract_tracker_id" class="form-control select2-basic" id="contractSelect">
                 <option value="">-- اختر المسافر أو ابحث بالكود أو الاسم --</option>
@@ -78,12 +92,14 @@
         </div>
 
         <!-- Supplier Select -->
-        <div class="col-md-12 mb-3 d-none" id="supplierFieldWrap">
+        <div class="col-md-12 mb-3 {{ $prefillSource === 'supplier' ? '' : 'd-none' }}" id="supplierFieldWrap">
             <label class="form-label font-weight-bold">اختيار المورد</label>
             <select name="supplier_id" class="form-control select2-basic" id="supplierSelect">
                 <option value="">-- اختر المورد --</option>
                 @foreach($suppliers as $supplier)
-                    <option value="{{ $supplier->id }}">{{ $supplier->name }} {{ $supplier->phone ? '('.$supplier->phone.')' : '' }}</option>
+                    <option value="{{ $supplier->id }}" {{ (int) $prefillSupplierId === (int) $supplier->id ? 'selected' : '' }}>
+                        {{ $supplier->name }} {{ $supplier->phone ? '('.$supplier->phone.')' : '' }}
+                    </option>
                 @endforeach
             </select>
         </div>
@@ -97,7 +113,7 @@
         <!-- Notes -->
         <div class="col-md-6 mb-3">
             <label class="form-label font-weight-bold">ملاحظات وبيان السند</label>
-            <input type="text" name="notes" class="form-control" placeholder="مثال: دفعة أولى كاش...">
+            <input type="text" name="notes" class="form-control" value="{{ $prefillNotes }}" placeholder="مثال: دفعة أولى كاش...">
         </div>
 
         <!-- Receipt Image (Optional) -->

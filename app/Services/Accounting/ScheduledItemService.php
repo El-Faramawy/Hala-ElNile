@@ -181,6 +181,32 @@ class ScheduledItemService
         });
     }
 
+    public function markAsProcessed(int $scheduledItemId, string $transactionDate): void
+    {
+        $scheduledItem = $this->scheduledItemRepository->findById($scheduledItemId);
+        if (! $scheduledItem) {
+            return;
+        }
+
+        $updatePayload = [
+            'last_paid_at' => $transactionDate,
+        ];
+
+        if ($scheduledItem->frequency === 'monthly') {
+            $updatePayload['next_due_date'] = Carbon::parse($scheduledItem->next_due_date)
+                ->addMonthNoOverflow()
+                ->toDateString();
+        } elseif ($scheduledItem->frequency === 'yearly') {
+            $updatePayload['next_due_date'] = Carbon::parse($scheduledItem->next_due_date)
+                ->addYearNoOverflow()
+                ->toDateString();
+        } else {
+            $updatePayload['is_active'] = false;
+        }
+
+        $this->scheduledItemRepository->update($scheduledItem, $updatePayload);
+    }
+
     private function formatDueDateBadge(ScheduledItem $item): string
     {
         if (! $item->is_active) {

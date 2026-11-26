@@ -448,7 +448,12 @@
 
                     createFormCache = null;
                     preloadCreateForm();
-                    $('#exportexample').DataTable().ajax.reload(null, false);
+                    if (window.reloadAfterModalSave) {
+                        window.reloadAfterModalSave = false;
+                        location.reload();
+                    } else {
+                        $('#exportexample').DataTable().ajax.reload(null, false);
+                    }
                 }, 100);
             },
             error: function (data) {

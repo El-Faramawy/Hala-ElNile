@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Accounting;
 
 use App\Models\Revenue;
+use App\Models\ScheduledItem;
 use App\Repositories\RevenueRepository;
+use App\Repositories\ScheduledItemRepository;
 use App\Repositories\TreasuryRepository;
 use App\Traits\UploadTrait;
 use Illuminate\Http\JsonResponse;
@@ -19,8 +21,14 @@ class RevenueService
 
     public function __construct(
         protected RevenueRepository $revenueRepository,
-        protected TreasuryRepository $treasuryRepository
+        protected TreasuryRepository $treasuryRepository,
+        protected ScheduledItemRepository $scheduledItemRepository
     ) {}
+
+    public function findScheduledItem(?int $scheduledItemId): ?ScheduledItem
+    {
+        return $scheduledItemId ? $this->scheduledItemRepository->findById($scheduledItemId) : null;
+    }
 
     public function getDataTable(array $filters = []): JsonResponse
     {
@@ -102,6 +110,9 @@ class RevenueService
     public function store(array $data): Revenue
     {
         return DB::transaction(function () use ($data): Revenue {
+            $scheduledItemId = isset($data['scheduled_item_id']) ? (int) $data['scheduled_item_id'] : null;
+            unset($data['scheduled_item_id']);
+
             if ($data['received_currency'] === 'EUR') {
                 $data['eur_equivalent'] = $data['amount'];
             }
@@ -115,6 +126,10 @@ class RevenueService
             $treasury = $this->treasuryRepository->findById((int) $data['treasury_id']);
             if ($treasury) {
                 $this->treasuryRepository->incrementBalance($treasury, (float) $data['amount']);
+            }
+
+            if ($scheduledItemId) {
+                $this->scheduledItemRepository->markAsProcessed($scheduledItemId, (string) $data['transaction_date']);
             }
 
             return $revenue;
